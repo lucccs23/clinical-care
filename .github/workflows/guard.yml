@@ -33,7 +33,7 @@ jobs:
             echo "Não foi possível obter a lista de arquivos."
             exit 1
           fi
-          protected='^(\.github/|\.claude/(skills/verify/|hooks/|settings\.json$)|CLAUDE\.md$|REVIEW\.md$|eslint\.config\.mjs$|playwright\.config\.mjs$|package(-lock)?\.json$|scripts/|\.npmrc$|\.nvmrc$)'
+          protected='^(\.github/|\.claude/(skills/verify/|hooks/|settings\.json$)|CLAUDE\.md$|REVIEW\.md$|eslint\.config\.mjs$|playwright\.config\.mjs$|package(-lock)?\.json$|desktop/(package(-lock)?\.json|playwright\.config\.mjs|main\.js)$|scripts/|\.npmrc$|\.nvmrc$)'
           blocked="$(printf '%s\n' "$files" | grep -E "$protected" || true)"
           if [ -n "$blocked" ]; then
             echo "Este PR altera arquivos que definem as checagens:"
