@@ -7,6 +7,7 @@
     "lint": "eslint .",
     "build": "node scripts/build.mjs",
     "test": "playwright test",
+    "verify": "playwright test --project=verify",
     "check": "npm run lint && npm run build && npm test"
   },
   "devDependencies": {
