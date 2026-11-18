@@ -1,0 +1,43 @@
+name: Guarda das checagens
+
+# Este fluxo roda a versão do branch padrão. Ele nunca baixa nem executa código do PR.
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guarda:
+    name: guarda
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Recusar mudanças nas checagens
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+        run: |
+          set -euo pipefail
+          if [ "$CHANGED_FILES" -ge 3000 ]; then
+            echo "O PR altera arquivos demais para ser conferido."
+            exit 1
+          fi
+          files="$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')"
+          if [ -z "$files" ] && [ "$CHANGED_FILES" -gt 0 ]; then
+            echo "Não foi possível obter a lista de arquivos."
+            exit 1
+          fi
+          protected='^(\.github/|\.claude/(skills/verify/|hooks/|settings\.json$)|CLAUDE\.md$|REVIEW\.md$|eslint\.config\.mjs$|playwright\.config\.mjs$|package(-lock)?\.json$|scripts/|\.npmrc$|\.nvmrc$)'
+          blocked="$(printf '%s\n' "$files" | grep -E "$protected" || true)"
+          if [ -n "$blocked" ]; then
+            echo "Este PR altera arquivos que definem as checagens:"
+            printf '%s\n' "$blocked" | sed 's/^/- /'
+            exit 1
+          fi
+          echo "Nenhum arquivo de checagem foi alterado."
