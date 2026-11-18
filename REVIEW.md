@@ -16,3 +16,4 @@ Verifique apenas os itens acionados pelo diff:
 | Dados de exemplo | São fictícios e não identificam pacientes. |
 
 Peça evidência da skill `verify` para qualquer mudança visível ao usuário.
+<!-- teste temporário da guarda -->
