@@ -312,8 +312,10 @@ async function commit(){
   try{for(const p of items){if(p.dup&&p.replace)for(const o of S.files.filter(f=>f.name===p.name)){await dbDel(o.id);S.favs=S.favs.filter(x=>!x.startsWith(o.id+':'))}
     await dbPut({id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:p.name,ext:p.ext,size:p.size,cat:p.cat,at:Date.now(),recs:p.recs,blob:p.blob});n++}}
   catch{toast('Não foi possível salvar. Verifique o espaço do navegador')}
-  lset('pp.favs',S.favs);dlg.close();S.pending=[];S.cat='';if(n)toast(plural(n,'arquivo importado','arquivos importados'));await reload();
+  lset('pp.favs',S.favs);await reload();closeDialog();if(n)toast(plural(n,'arquivo importado','arquivos importados'));
 }
+function closeDialog(){dlg.close();dlg.innerHTML='';S.pending=[];S.cat=''}
+dlg.addEventListener('cancel',e=>{e.preventDefault();closeDialog()});
 function openFile(id){const f=S.files.find(x=>x.id===id),t=f&&FT[f.ext];if(!f)return;const type=t[2];const u=URL.createObjectURL(type?new Blob([f.blob],{type}):f.blob);if(type)window.open(u,'_blank','noopener');else{const a=document.createElement('a');a.href=u;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(u),60000)}
 function template(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿medicamento;indicacao;posologia;dose_min_kg;dose_max_kg;dose_maxima;dose_minima;unidade;concentracao;tomadas_dia;observacoes\r\n'],{type:'text/csv'}));a.download='modelo-doses.csv';a.click();URL.revokeObjectURL(a.href)}
 
@@ -386,7 +388,7 @@ document.addEventListener('click',async e=>{
   else if(d.copy){const r=S.recs.find(x=>x.id===d.copy);copy([r.title,...(r.fields||[]).map(([k,v])=>k+': '+v),r.text].filter(Boolean).join('\n'),b)}
   else if(d.open)openFile(d.open);
   else if(d.del){const f=S.files.find(x=>x.id===d.del);if(f&&confirm(`Excluir "${f.name}" e seus registros?`)){await dbDel(f.id);S.favs=S.favs.filter(x=>!x.startsWith(f.id+':'));lset('pp.favs',S.favs);toast('Arquivo excluído');reload()}}
-  else if('cancel' in d){dlg.close();S.pending=[];S.cat=''}
+  else if('cancel' in d)closeDialog();
   else if('commit' in d)commit();
 });
 document.addEventListener('change',async e=>{const t=e.target,d=t.dataset;
