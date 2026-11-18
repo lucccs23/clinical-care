@@ -149,6 +149,19 @@ dialog h2{font-size:20px}
 #drop.on{display:grid}#drop div{padding:50px 70px;border:2px dashed #70a5fa;border-radius:24px}
 #toast{position:fixed;right:24px;bottom:24px;z-index:40;background:var(--text);color:var(--bg);padding:10px 14px;border-radius:10px;font-weight:600;opacity:0;transform:translateY(8px);transition:.18s;pointer-events:none}
 #toast.on{opacity:1;transform:none}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;padding:2px}
+.chip{flex:none;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:99px;color:var(--soft);font-size:13.5px;font-weight:600}
+.chip:hover{background:var(--inset)}.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip span{font-weight:400;opacity:.8;margin-left:5px}
+mark{background:color-mix(in srgb,var(--amber) 32%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.form .ck{grid-column:1/-1;display:flex;align-items:center;gap:9px;color:var(--soft);font-size:14px}
+.form .ck input{width:18px;height:18px;margin:0;flex:none;accent-color:var(--blue)}
+.ca{display:flex;gap:8px;margin-top:10px}
+.hbtn{display:flex;gap:8px;flex-wrap:wrap}
+.stackf{display:grid;gap:12px;margin:14px 0 0}
+.stackf input,.stackf select,.stackf textarea{display:block;width:100%;margin-top:3px;padding:9px;background:var(--inset);border:1px solid var(--line);border-radius:9px;color:var(--text)}
+.stackf textarea{min-height:190px;resize:vertical}
+.err{color:var(--red);font-size:13.5px;min-height:1.2em}
 @media(max-width:1240px){.dash{grid-template-columns:minmax(0,1fr)}.ctl.s input{width:150px}}
 @media(max-width:940px){
   .app{display:block;padding:12px 16px}
@@ -195,25 +208,46 @@ dialog h2{font-size:20px}
   </div>
 </div>
 <input id="file" type="file" multiple hidden accept=".csv,.tsv,.xlsx,.json,.txt,.md,.docx,.pdf,.png,.jpg,.jpeg,.webp">
+<input id="restore" type="file" hidden accept=".json">
 <dialog id="dlg" aria-labelledby="dt"></dialog>
 <div id="drop"><div>Solte os arquivos para importar</div></div>
 <div id="toast" role="status"></div>
 
 <script>
-const P={grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',pill:'<path d="m10.5 20.5 10-10a5 5 0 0 0-7-7l-10 10a5 5 0 0 0 7 7ZM8.5 8.5l7 7"/>',rx:'<path d="M6 2h9l4 4v16H6zM14 2v5h5M9 13h7M9 17h7"/>',clip:'<path d="M9 3h6v4H9zM9 5H5v17h14V5h-4M9 13h6M9 17h6"/>',box:'<path d="M3 6h6l2 3h10v11H3z"/>',calc:'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8.5 6h7M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5h.01M8.5 18h.01M12 18h.01M15.5 18h.01"/>',star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.2-.9z"/>',up:'<path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',moon:'<path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z"/>',pulse:'<path d="M3 12h4l2-6 4 12 2-6h6"/>',scale:'<path d="M5 4h14l2 16H3zM9 9a3 3 0 0 1 6 0"/>',bulb:'<path d="M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2z"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>',open:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>',left:'<path d="m15 5-7 7 7 7"/>',right:'<path d="m9 5 7 7-7 7"/>'};
+const P={grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',pill:'<path d="m10.5 20.5 10-10a5 5 0 0 0-7-7l-10 10a5 5 0 0 0 7 7ZM8.5 8.5l7 7"/>',rx:'<path d="M6 2h9l4 4v16H6zM14 2v5h5M9 13h7M9 17h7"/>',clip:'<path d="M9 3h6v4H9zM9 5H5v17h14V5h-4M9 13h6M9 17h6"/>',box:'<path d="M3 6h6l2 3h10v11H3z"/>',calc:'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8.5 6h7M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5h.01M8.5 18h.01M12 18h.01M15.5 18h.01"/>',star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.2-.9z"/>',up:'<path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',moon:'<path d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z"/>',pulse:'<path d="M3 12h4l2-6 4 12 2-6h6"/>',scale:'<path d="M5 4h14l2 16H3zM9 9a3 3 0 0 1 6 0"/>',bulb:'<path d="M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2z"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/>',open:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>',left:'<path d="m15 5-7 7 7 7"/>',right:'<path d="m9 5 7 7-7 7"/>',down:'<path d="M12 4v12M7 11l5 5 5-5M4 20h16"/>',plus:'<path d="M12 5v14M5 12h14"/>'};
 const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 const CATS={doses:['Doses','pill','var(--c1)'],prescricoes:['Prescrições','rx','var(--c2)'],protocolos:['Protocolos','clip','var(--c3)'],outros:['Outros','box','var(--c4)']};
 const CK=Object.keys(CATS);
+const CG={all:'Todas',renal:'Renal e eletrólitos',fluidos:'Infusão e fluidos',clinica:'Clínica geral',escores:'Escores'};
+const SEXO=['Masculino','Feminino'];
+const points=v=>Object.values(v).reduce((s,x)=>s+(parseInt(x,10)||0),0);
+const pts=n=>plural(n,'ponto','pontos');
 const CALCS=[
- {id:'c-clcr',title:'Clearance de creatinina',alias:'cockcroft gault função renal',desc:'Cockcroft-Gault',f:[['idade','Idade (anos)'],['peso','Peso (kg)'],['cr','Creatinina (mg/dL)'],['sexo','Sexo',['Masculino','Feminino']]],run:v=>fmt((140-v.idade)*v.peso/(72*v.cr)*(v.sexo==='Feminino'?.85:1))+' mL/min'},
- {id:'c-inf',title:'Infusão contínua',alias:'bomba vasopressor mcg kg min ml h',desc:'mcg/kg/min para mL/h',f:[['dose','Dose (mcg/kg/min)'],['peso','Peso (kg)'],['mg','Droga na solução (mg)'],['vol','Volume total (mL)']],run:v=>fmt(v.dose*v.peso*60*v.vol/(v.mg*1000))+' mL/h'},
- {id:'c-holliday',title:'Holliday-Segar',alias:'manutenção hidratação pediatria soro',desc:'Manutenção hídrica',f:[['peso','Peso (kg)']],run:v=>{const d=holliday(v.peso);return fmt(d)+' mL/dia · '+fmt(d/24)+' mL/h'}},
- {id:'c-ag',title:'Ânion gap',alias:'acidose metabólica gasometria',desc:'Na − (Cl + HCO₃)',f:[['na','Sódio (mEq/L)'],['cl','Cloro (mEq/L)'],['hco','Bicarbonato (mEq/L)']],run:v=>fmt(v.na-v.cl-v.hco)+' mEq/L'},
- {id:'c-na',title:'Sódio corrigido',alias:'hiperglicemia cetoacidose hiponatremia',desc:'Na + 1,6 × (glicose − 100) / 100',f:[['na','Sódio (mEq/L)'],['gli','Glicose (mg/dL)']],run:v=>fmt(v.na+1.6*(v.gli-100)/100)+' mEq/L'}
+ {id:'c-clcr',g:'renal',title:'Clearance de creatinina',alias:'cockcroft gault função renal',desc:'Cockcroft-Gault',f:[['idade','Idade (anos)'],['peso','Peso (kg)'],['cr','Creatinina (mg/dL)'],['sexo','Sexo',['Masculino','Feminino']]],run:v=>fmt((140-v.idade)*v.peso/(72*v.cr)*(v.sexo==='Feminino'?.85:1))+' mL/min'},
+ {id:'c-inf',g:'fluidos',title:'Infusão contínua',alias:'bomba vasopressor mcg kg min ml h',desc:'mcg/kg/min para mL/h',f:[['dose','Dose (mcg/kg/min)'],['peso','Peso (kg)'],['mg','Droga na solução (mg)'],['vol','Volume total (mL)']],run:v=>fmt(v.dose*v.peso*60*v.vol/(v.mg*1000))+' mL/h'},
+ {id:'c-holliday',g:'fluidos',title:'Holliday-Segar',alias:'manutenção hidratação pediatria soro',desc:'Manutenção hídrica',f:[['peso','Peso (kg)']],run:v=>{const d=holliday(v.peso);return fmt(d)+' mL/dia · '+fmt(d/24)+' mL/h'}},
+ {id:'c-ag',g:'renal',title:'Ânion gap',alias:'acidose metabólica gasometria',desc:'Na − (Cl + HCO₃)',f:[['na','Sódio (mEq/L)'],['cl','Cloro (mEq/L)'],['hco','Bicarbonato (mEq/L)']],run:v=>fmt(v.na-v.cl-v.hco)+' mEq/L'},
+ {id:'c-na',g:'renal',title:'Sódio corrigido',alias:'hiperglicemia cetoacidose hiponatremia',desc:'Na + 1,6 × (glicose − 100) / 100',f:[['na','Sódio (mEq/L)'],['gli','Glicose (mg/dL)']],run:v=>fmt(v.na+1.6*(v.gli-100)/100)+' mEq/L'},
+ {id:'c-ckdepi',g:'renal',title:'TFG estimada',alias:'ckd-epi 2021 filtração glomerular função renal',desc:'CKD-EPI 2021, adultos',f:[['idade','Idade (anos)'],['cr','Creatinina (mg/dL)'],['sexo','Sexo',SEXO]],run:v=>{if(v.idade<18)return null;const f=v.sexo==='Feminino',k=f?.7:.9,r=v.cr/k;return fmt(142*Math.min(r,1)**(f?-.241:-.302)*Math.max(r,1)**-1.2*.9938**v.idade*(f?1.012:1))+' mL/min/1,73 m²'}},
+ {id:'c-agalb',g:'renal',title:'Ânion gap corrigido',alias:'albumina acidose metabólica gasometria',desc:'AG + 2,5 × (4 − albumina)',f:[['na','Sódio (mEq/L)'],['cl','Cloro (mEq/L)'],['hco','Bicarbonato (mEq/L)'],['alb','Albumina (g/dL)']],run:v=>fmt(v.na-v.cl-v.hco+2.5*(4-v.alb))+' mEq/L'},
+ {id:'c-osm',g:'renal',title:'Osmolaridade sérica',alias:'osmolalidade sódio glicose ureia',desc:'2 × Na + glicose/18 + ureia/6',f:[['na','Sódio (mEq/L)'],['gli','Glicose (mg/dL)'],['ur','Ureia (mg/dL)']],run:v=>fmt(2*v.na+v.gli/18+v.ur/6)+' mOsm/L'},
+ {id:'c-ca',g:'renal',title:'Cálcio corrigido',alias:'albumina hipocalcemia hipercalcemia',desc:'Ca + 0,8 × (4 − albumina)',f:[['ca','Cálcio total (mg/dL)'],['alb','Albumina (g/dL)']],run:v=>fmt(v.ca+.8*(4-v.alb))+' mg/dL'},
+ {id:'c-agua',g:'renal',title:'Déficit de água livre',alias:'hipernatremia desidratação sódio',desc:'Água corporal × (Na/140 − 1)',f:[['peso','Peso (kg)'],['na','Sódio (mEq/L)'],['sexo','Sexo',SEXO]],run:v=>v.na<=140?null:fmt((v.sexo==='Feminino'?.5:.6)*v.peso*(v.na/140-1))+' L'},
+ {id:'c-gota',g:'fluidos',title:'Gotejamento',alias:'soro gotas microgotas velocidade infusão',desc:'Gotas e microgotas por minuto',f:[['vol','Volume (mL)'],['h','Tempo (horas)']],run:v=>fmt(v.vol/(v.h*3))+' gotas/min · '+fmt(v.vol/v.h)+' microgotas/min'},
+ {id:'c-parkland',g:'fluidos',title:'Parkland',alias:'queimadura queimado reposição volêmica',desc:'4 mL × kg × % de superfície queimada',f:[['peso','Peso (kg)'],['scq','Superfície queimada (%)']],run:v=>{if(v.scq>100)return null;const d=4*v.peso*v.scq;return fmt(d)+' mL em 24 h · '+fmt(d/16)+' mL/h nas primeiras 8 h'}},
+ {id:'c-imc',g:'clinica',title:'IMC',alias:'índice de massa corporal obesidade peso altura',desc:'Peso / altura²',f:[['peso','Peso (kg)'],['alt','Altura (cm)']],run:v=>fmt(v.peso/(v.alt/100)**2)+' kg/m²'},
+ {id:'c-sc',g:'clinica',title:'Superfície corporal',alias:'mosteller sc quimioterapia',desc:'Mosteller',f:[['peso','Peso (kg)'],['alt','Altura (cm)']],run:v=>fmt(Math.sqrt(v.peso*v.alt/3600))+' m²'},
+ {id:'c-pam',g:'clinica',title:'Pressão arterial média',alias:'pam hemodinâmica choque',desc:'(PAS + 2 × PAD) / 3',f:[['pas','PAS (mmHg)'],['pad','PAD (mmHg)']],run:v=>v.pad>v.pas?null:fmt((v.pas+2*v.pad)/3)+' mmHg'},
+ {id:'c-qtc',g:'clinica',title:'QT corrigido',alias:'qtc bazett ecg eletrocardiograma',desc:'Bazett',f:[['qt','QT (ms)'],['fc','Frequência cardíaca (bpm)']],run:v=>fmt(v.qt/Math.sqrt(60/v.fc))+' ms'},
+ {id:'c-pf',g:'clinica',title:'Relação PaO₂/FiO₂',alias:'pf sdra oxigenação gasometria ventilação',desc:'PaO₂ / fração inspirada de O₂',f:[['pao','PaO₂ (mmHg)'],['fio','FiO₂ (%)']],run:v=>v.fio>100||v.fio<21?null:fmt(v.pao/(v.fio/100))+' mmHg'},
+ {id:'c-glasgow',g:'escores',title:'Escala de Glasgow',alias:'coma nível de consciência neurológico trauma',desc:'Abertura ocular, resposta verbal e motora',f:[['o','Abertura ocular',['4 · Espontânea','3 · Ao chamado','2 · À pressão','1 · Ausente']],['v','Resposta verbal',['5 · Orientada','4 · Confusa','3 · Palavras','2 · Sons','1 · Ausente']],['m','Resposta motora',['6 · Obedece comandos','5 · Localiza','4 · Flexão normal','3 · Flexão anormal','2 · Extensão','1 · Ausente']]],run:v=>{const n=points(v);return pts(n)+' · '+(n>=13?'leve':n>=9?'moderado':'grave')}},
+ {id:'c-qsofa',g:'escores',title:'qSOFA',alias:'sepse infecção',desc:'Um ponto por critério',f:[['fr','Frequência respiratória ≥ 22/min','check',1],['men','Alteração do estado mental','check',1],['pas','PAS ≤ 100 mmHg','check',1]],run:v=>pts(points(v))},
+ {id:'c-curb',g:'escores',title:'CURB-65',alias:'pneumonia comunitária pac gravidade',desc:'Um ponto por critério',f:[['c','Confusão mental','check',1],['u','Ureia > 7 mmol/L (cerca de 42 mg/dL)','check',1],['r','Frequência respiratória ≥ 30/min','check',1],['b','PAS < 90 ou PAD ≤ 60 mmHg','check',1],['i','Idade ≥ 65 anos','check',1]],run:v=>pts(points(v))},
+ {id:'c-cha',g:'escores',title:'CHA₂DS₂-VASc',alias:'cha2ds2 vasc fibrilação atrial avc anticoagulação',desc:'Risco de AVC na fibrilação atrial',f:[['idade','Idade',['0 · Menos de 65 anos','1 · 65 a 74 anos','2 · 75 anos ou mais']],['sexo','Sexo',['0 · Masculino','1 · Feminino']],['icc','Insuficiência cardíaca','check',1],['has','Hipertensão','check',1],['dm','Diabetes','check',1],['avc','AVC, AIT ou tromboembolismo prévio','check',2],['vas','Doença vascular','check',1]],run:v=>pts(points(v))}
 ];
 const NAV=[['home','Visão geral','grid'],...CK.map(k=>[k,CATS[k][0],CATS[k][1]]),['calc','Calculadoras','calc'],['fav','Favoritos','star']];
 const FT={pdf:['#ef4444','#991b1b','application/pdf'],xlsx:['#22c55e','#166534'],csv:['#14b8a6','#115e59','text/plain;charset=utf-8'],tsv:['#14b8a6','#115e59','text/plain;charset=utf-8'],docx:['#3b82f6','#1e3a8a'],json:['#a855f7','#581c87','text/plain;charset=utf-8'],txt:['#64748b','#1e293b','text/plain;charset=utf-8'],md:['#64748b','#1e293b','text/plain;charset=utf-8'],png:['#f97316','#9a3412','image/png'],jpg:['#f97316','#9a3412','image/jpeg'],jpeg:['#f97316','#9a3412','image/jpeg'],webp:['#f97316','#9a3412','image/webp']};
-const MAX_MB=50,LIMIT=150;
+const MAX_MB=50,MAX_BACKUP_MB=400,LIMIT=150;
 const $=s=>document.querySelector(s),view=$('#view'),q=$('#q'),kg=$('#kg'),dlg=$('#dlg');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
@@ -226,7 +260,17 @@ const holliday=p=>p<=10?p*100:p<=20?1000+(p-10)*50:1500+(p-20)*20;
 const weight=()=>{const w=parseFloat(kg.value);return w>=.3&&w<=300?w:null};
 const lget=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const lset=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{/* preferência continua só na sessão */}};
-const S={view:'home',files:[],recs:[],favs:lget('pp.favs',[]).filter(x=>typeof x==='string'),theme:lget('pp.theme','dark'),pending:[],cat:'',mem:false};
+const S={view:'home',files:[],recs:[],favs:lget('pp.favs',[]).filter(x=>typeof x==='string'),theme:lget('pp.theme','dark'),pending:[],cat:'',mem:false,sf:'all',cg:'all',cv:{}};
+const newId=()=>'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function hl(s,T=[]){
+  s=String(s??'');if(!T.length)return esc(s);
+  let n='';const m=[],R=[];
+  for(let i=0;i<s.length;i++){const c=norm(s[i]);n+=c;for(let j=0;j<c.length;j++)m.push(i)}
+  T.forEach(x=>{for(let p=n.indexOf(x);p>=0;p=n.indexOf(x,p+x.length))R.push([m[p],m[p+x.length-1]+1])});
+  R.sort((a,b)=>a[0]-b[0]);let o='',e=0;
+  R.forEach(([a,b])=>{if(b<=e)return;a=Math.max(a,e);o+=esc(s.slice(e,a))+'<mark>'+esc(s.slice(a,b))+'</mark>';e=b});
+  return o+esc(s.slice(e));
+}
 
 /* Armazenamento local */
 let dbp;
@@ -310,7 +354,7 @@ const catOpts=c=>CK.map(k=>`<option value="${k}" ${k===c?'selected':''}>${CATS[k
 async function commit(){
   const items=S.pending.filter(x=>!x.err);let n=0;
   try{for(const p of items){if(p.dup&&p.replace)for(const o of S.files.filter(f=>f.name===p.name)){await dbDel(o.id);S.favs=S.favs.filter(x=>!x.startsWith(o.id+':'))}
-    await dbPut({id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:p.name,ext:p.ext,size:p.size,cat:p.cat,at:Date.now(),recs:p.recs,blob:p.blob});n++}}
+    await dbPut({id:newId(),name:p.name,ext:p.ext,size:p.size,cat:p.cat,at:Date.now(),recs:p.recs,blob:p.blob});n++}}
   catch{toast('Não foi possível salvar. Verifique o espaço do navegador')}
   lset('pp.favs',S.favs);await reload();closeDialog();if(n)toast(plural(n,'arquivo importado','arquivos importados'));
 }
@@ -318,6 +362,61 @@ function closeDialog(){dlg.close();dlg.innerHTML='';S.pending=[];S.cat=''}
 dlg.addEventListener('cancel',e=>{e.preventDefault();closeDialog()});
 function openFile(id){const f=S.files.find(x=>x.id===id),t=f&&FT[f.ext];if(!f)return;const type=t[2];const u=URL.createObjectURL(type?new Blob([f.blob],{type}):f.blob);if(type)window.open(u,'_blank','noopener');else{const a=document.createElement('a');a.href=u;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(u),60000)}
 function template(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿medicamento;indicacao;posologia;dose_min_kg;dose_max_kg;dose_maxima;dose_minima;unidade;concentracao;tomadas_dia;observacoes\r\n'],{type:'text/csv'}));a.download='modelo-doses.csv';a.click();URL.revokeObjectURL(a.href)}
+
+/* Registro escrito no painel */
+function newRec(cat){
+  S.cat='';dlg.innerHTML=`<h2 id="dt">Novo registro</h2><p class="sub">Escreva uma prescrição, um protocolo ou uma anotação.</p><div class="stackf"><label>Título<input id="nt" maxlength="120" autocomplete="off"></label><label>Categoria<select id="nc">${catOpts(cat||(CATS[S.view]?S.view:'prescricoes'))}</select></label><label>Texto<textarea id="nx"></textarea></label><p class="err" id="ne" role="alert"></p></div><div class="priv">O registro fica apenas neste navegador, sem criptografia. Não inclua dados que identifiquem pacientes.</div><div class="da"><button class="sec" data-cancel>Cancelar</button><button class="pri" data-savenew>Salvar</button></div>`;
+  dlg.showModal();$('#nt').focus();
+}
+async function saveNew(){
+  const title=$('#nt').value.trim(),text=$('#nx').value.trim(),cat=$('#nc').value,name=title.replace(/[\\/:*?"<>|]+/g,'-')+'.txt',fail=m=>{$('#ne').textContent=m};
+  if(!title||!text)return fail('Preencha o título e o texto.');
+  if(S.files.some(f=>norm(f.name)===norm(name)))return fail('Já existe um arquivo com esse nome.');
+  const blob=new Blob([text]);
+  try{await dbPut({id:newId(),name,ext:'txt',size:blob.size,cat,at:Date.now(),recs:[{title,text}],blob})}catch{return fail('Não foi possível salvar. Verifique o espaço do navegador.')}
+  S.view=cat;q.value='';await reload();closeDialog();toast('Registro salvo');
+}
+
+/* Backup */
+function saveAs(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),60000)}
+async function toB64(blob){const b=new Uint8Array(await blob.arrayBuffer()),out=[];for(let i=0;i<b.length;i+=32766)out.push(btoa(String.fromCharCode(...b.subarray(i,i+32766))));return out.join('')}
+function fromB64(s){const t=atob(s),b=new Uint8Array(t.length);for(let i=0;i<t.length;i++)b[i]=t.charCodeAt(i);return b}
+async function exportBackup(){
+  if(!S.files.length)return toast('Ainda não há arquivos para exportar');
+  if(S.files.reduce((s,f)=>s+f.size,0)*4/3>MAX_BACKUP_MB*1048576)return toast('A biblioteca passa do limite de '+MAX_BACKUP_MB+' MB do backup');
+  try{
+    const parts=['{"app":"painel-plantao","versao":1,"favs":',JSON.stringify(S.favs),',"files":['];
+    for(const[i,f]of S.files.entries()){const{blob,...meta}=f;parts.push((i?',':'')+JSON.stringify({...meta,data:await toB64(blob)}))}
+    parts.push(']}');saveAs(new Blob(parts,{type:'application/json'}),'painel-plantao-backup-'+new Date().toLocaleDateString('sv')+'.json');toast('Backup exportado');
+  }catch{toast('Não foi possível gerar o backup')}
+}
+const bad=()=>{throw Error('Backup inválido')};
+const optNum=x=>x==null||Number.isFinite(x);
+function cleanRec(r){
+  if(typeof r?.title!=='string'||!r.title)bad();const o={title:r.title};if(r.doc===true)o.doc=true;
+  if(r.text!=null){if(typeof r.text!=='string')bad();o.text=r.text}
+  if(r.fields!=null){if(!Array.isArray(r.fields)||!r.fields.every(f=>Array.isArray(f)&&f.length===2&&f.every(x=>typeof x==='string')))bad();o.fields=r.fields}
+  if(r.calc!=null){const c=r.calc;if(!Number.isFinite(c.a)||!Number.isFinite(c.b)||!(c.a>0&&c.b>=c.a)||typeof c.u!=='string'||![c.cap,c.fl,c.c,c.d].every(optNum))bad();o.calc={a:c.a,b:c.b,cap:c.cap??null,fl:c.fl??null,u:c.u,c:c.c??null,d:c.d??null}}
+  return o;
+}
+function cleanFile(f){
+  const ext=typeof f?.name==='string'?extOf(f.name):'';if(!Object.hasOwn(FT,ext)||!Object.hasOwn(CATS,f.cat)||typeof f.data!=='string'||!Array.isArray(f.recs)||!f.recs.length)bad();
+  const bytes=fromB64(f.data);return{old:String(f.id),file:{id:newId(),name:f.name,ext,size:bytes.length,cat:f.cat,at:Number.isFinite(f.at)?f.at:Date.now(),recs:f.recs.map(cleanRec),blob:new Blob([bytes])}};
+}
+async function restoreBackup(file){
+  if(!file)return;if(file.size>MAX_BACKUP_MB*1048576)return toast('Backup maior que '+MAX_BACKUP_MB+' MB');
+  let items,favs;
+  try{const d=JSON.parse(await file.text());if(d?.app!=='painel-plantao'||d.versao!==1||!Array.isArray(d.files)||!d.files.length)bad();items=d.files.map(cleanFile);favs=Array.isArray(d.favs)?d.favs.filter(x=>typeof x==='string'):[]}
+  catch{return toast('Backup inválido ou corrompido')}
+  if(!confirm(`Restaurar ${plural(items.length,'arquivo','arquivos')}? Arquivos com o mesmo nome serão substituídos.`))return;
+  const before=S.files,ids=new Map(items.map(x=>[x.old,x.file.id]));
+  try{
+    for(const{file:f}of items){await dbPut(f);for(const o of before.filter(x=>x.name===f.name)){await dbDel(o.id);S.favs=S.favs.filter(x=>!x.startsWith(o.id+':'))}}
+    const restored=favs.flatMap(x=>{const c=x.indexOf(':');if(c<0)return CALCS.some(k=>k.id===x)?[x]:[];const id=ids.get(x.slice(0,c));return id?[id+x.slice(c)]:[]});
+    S.favs=[...new Set([...S.favs,...restored])];toast(plural(items.length,'arquivo restaurado','arquivos restaurados'));
+  }catch{toast('A restauração não terminou. Verifique o espaço do navegador')}
+  lset('pp.favs',S.favs);await reload();
+}
 
 /* Interface */
 let tt;function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2600)}
@@ -329,13 +428,15 @@ function excerpt(t,terms){const n=norm(t),i=Math.min(...terms.map(x=>{const p=n.
 function recCard(r,terms=[]){
   const w=weight();let calc='';
   if(r.calc){if(w){const d=doseCalc(r.calc,w);calc=`<div class="res"><small>Para ${fmt(w)} kg</small><b>${esc(d.main)}</b>${d.cap?'<em>Limite de dose aplicado</em>':''}<small>Calculado com os valores do seu arquivo</small></div>`}else calc='<div class="res"><small>Informe o peso para calcular a dose</small></div>'}
-  let body='';if(r.text){const ex=excerpt(r.text,terms),t=ex||r.text;body=t.length>520?`<div class="body">${esc(t.slice(0,520))}…</div><details><summary>Ver texto completo</summary><div class="body">${esc(r.text)}</div></details>`:`<div class="body">${esc(t)}</div>${ex?`<details><summary>Ver texto completo</summary><div class="body">${esc(r.text)}</div></details>`:''}`}
-  return`<article class="rec panel"><div class="ch"><div style="min-width:0"><h3>${esc(r.title)}</h3><div class="src"><span class="dot" style="background:${CATS[r.cat][2]}"></span>${CATS[r.cat][0]} · ${esc(r.fname)}</div></div><div class="acts">${star(r)}</div></div>${calc}${r.fields?.length?`<dl>${r.fields.map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`:''}${body}<div class="rf">${r.doc?'':`<button class="sec" data-copy="${esc(r.id)}">${ic('copy',15)}Copiar</button>`}${r.doc||['txt','md','docx'].includes(r.ext)?`<button class="sec" data-open="${esc(r.fid)}">${ic('open',15)}Abrir arquivo</button>`:''}</div></article>`;
+  let body='';if(r.text){const ex=excerpt(r.text,terms),t=ex||r.text;body=t.length>520?`<div class="body">${hl(t.slice(0,520),terms)}…</div><details><summary>Ver texto completo</summary><div class="body">${esc(r.text)}</div></details>`:`<div class="body">${hl(t,terms)}</div>${ex?`<details><summary>Ver texto completo</summary><div class="body">${esc(r.text)}</div></details>`:''}`}
+  return`<article class="rec panel"><div class="ch"><div style="min-width:0"><h3>${hl(r.title,terms)}</h3><div class="src"><span class="dot" style="background:${CATS[r.cat][2]}"></span>${CATS[r.cat][0]} · ${esc(r.fname)}</div></div><div class="acts">${star(r)}</div></div>${calc}${r.fields?.length?`<dl>${r.fields.map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${hl(v,terms)}</dd></div>`).join('')}</dl>`:''}${body}<div class="rf">${r.doc?'':`<button class="sec" data-copy="${esc(r.id)}">${ic('copy',15)}Copiar</button>`}${r.doc||['txt','md','docx'].includes(r.ext)?`<button class="sec" data-open="${esc(r.fid)}">${ic('open',15)}Abrir arquivo</button>`:''}</div></article>`;
 }
-function calcCard(c){const w=weight();return`<article class="calc rec panel" id="${c.id}" data-calc="${c.id}"><div class="ch"><div><h3>${esc(c.title)}</h3><div class="src">${esc(c.desc)}</div></div>${star(c)}</div><div class="form">${c.f.map(([k,l,o])=>`<label>${esc(l)}${o?`<select data-k="${k}">${o.map(x=>`<option>${x}</option>`).join('')}</select>`:`<input data-k="${k}" type="number" step="any" inputmode="decimal" value="${k==='peso'&&w?w:''}">`}</label>`).join('')}</div><div class="out" aria-live="polite"></div></article>`}
-const cards=(a,t)=>{const s=a.slice(0,LIMIT);return`<div class="grid">${s.map(i=>i.t==='calc'?calcCard(i):recCard(i,t)).join('')}</div>${a.length>LIMIT?`<p class="sub" style="margin-top:14px">Mostrando ${LIMIT} de ${a.length.toLocaleString('pt-BR')}. Refine a busca para ver os demais.</p>`:''}`};
-const calcs=()=>CALCS.map(c=>({...c,t:'calc',nt:norm(c.title),hay:norm([c.title,c.alias,c.desc,'calculadora'].join(' '))}));
-const emptyBox=(icon,t,d,cat)=>`<div class="panel empty"><div class="tile lg">${ic(icon,30)}</div><b>${t}</b><span>${d}</span><button class="pri" data-import="${cat||''}">${ic('up')}Importar arquivos</button></div>`;
+function calcCard(c,T=[]){const w=weight(),sv=S.cv[c.id]||{};return`<article class="calc rec panel" id="${c.id}" data-calc="${c.id}"><div class="ch"><div><h3>${hl(c.title,T)}</h3><div class="src">${esc(c.desc)}</div></div>${star(c)}</div><div class="form">${c.f.map(([k,l,o,p])=>o==='check'?`<label class="ck"><input data-k="${k}" data-p="${p}" type="checkbox" ${sv[k]?'checked':''}>${esc(l)}</label>`:`<label>${esc(l)}${o?`<select data-k="${k}">${o.map(x=>`<option ${sv[k]===x?'selected':''}>${esc(x)}</option>`).join('')}</select>`:`<input data-k="${k}" type="number" step="any" inputmode="decimal" value="${esc(sv[k]??(k==='peso'&&w?w:''))}">`}</label>`).join('')}</div><div class="out" aria-live="polite"></div><div class="ca"><button class="sec" data-ccopy="${c.id}" aria-label="Copiar resultado de ${esc(c.title)}">${ic('copy',15)}Copiar</button><button class="sec" data-cclear="${c.id}" aria-label="Limpar ${esc(c.title)}">Limpar</button></div></article>`}
+const chips=(items,cur,attr)=>`<div class="chips" role="group" aria-label="Filtros">${items.map(([k,l,n])=>`<button class="chip ${k===cur?'on':''}" data-${attr}="${k}" aria-pressed="${k===cur}">${l}${n!=null?`<span>${n}</span>`:''}</button>`).join('')}</div>`;
+const byTitle=a=>[...a].sort((x,y)=>x.title.localeCompare(y.title,'pt-BR',{numeric:true,sensitivity:'base'}));
+const cards=(a,t)=>{const s=a.slice(0,LIMIT);return`<div class="grid">${s.map(i=>i.t==='calc'?calcCard(i,t):recCard(i,t)).join('')}</div>${a.length>LIMIT?`<p class="sub" style="margin-top:14px">Mostrando ${LIMIT} de ${a.length.toLocaleString('pt-BR')}. Refine a busca para ver os demais.</p>`:''}`};
+const calcs=()=>CALCS.map(c=>({...c,t:'calc',nt:norm(c.title),hay:norm([c.title,c.alias,c.desc,CG[c.g],'calculadora'].join(' '))}));
+const emptyBox=(icon,t,d,cat)=>`<div class="panel empty"><div class="tile lg">${ic(icon,30)}</div><b>${t}</b><span>${d}</span><button class="pri" data-import="${cat||''}">${ic('up')}Importar arquivos</button>${cat?`<button class="sec" data-new="${cat}">${ic('plus',15)}Escrever registro</button>`:''}</div>`;
 function fileCard(f){const t=FT[f.ext];return`<button class="fc" data-go="files" aria-label="${esc(f.name)}"><div class="face" data-e="${esc(f.ext.toUpperCase())}" style="--a:${t[0]};--b:${t[1]}"><b>${esc(f.name.replace(/\.[^.]+$/,''))}</b><span>${esc(f.ext.toUpperCase())}</span></div><div class="fm"><span class="pill"><span class="dot" style="background:${CATS[f.cat][2]}"></span>${CATS[f.cat][0]}</span>${new Date(f.at).toLocaleDateString('pt-BR')}<b>${f.recs[0]?.doc?'Documento':f.recs.length.toLocaleString('pt-BR')+' reg.'}</b></div></button>`}
 function donut(tot,seg){const r=54,C=2*Math.PI*r,gap=seg.length>1?3:0;let off=0;const arcs=seg.map(([k,n])=>{const l=n/tot*C,a=`<circle class="arc" data-k="${k}" cx="75" cy="75" r="${r}" fill="none" stroke="${CATS[k][2]}" stroke-width="17" stroke-dasharray="${Math.max(l-gap,1)} ${C}" stroke-dashoffset="${-off}"><title>${CATS[k][0]}: ${n}</title></circle>`;off+=l;return a}).join('');return`<div class="donut"><svg viewBox="0 0 150 150" width="150" height="150" role="img" aria-label="Distribuição dos registros por categoria"><g transform="rotate(-90 75 75)">${tot?arcs:`<circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--track)" stroke-width="17"/>`}</g></svg><div class="dc"><span id="dl">Total</span><b id="dv">${tot.toLocaleString('pt-BR')}</b></div></div>`}
 function home(){
@@ -352,37 +453,45 @@ function home(){
   <section class="card panel" style="overflow:hidden"><div class="ch"><div><h2>Arquivos</h2><p class="sub" style="margin-top:12px">Importados</p><div class="big m" style="margin-top:4px">${S.files.length}</div></div><div class="tile lg">${ic('box',30)}</div></div><div style="display:flex;justify-content:space-between;margin-top:14px"><button class="sec" data-go="files">Ver arquivos</button><span style="display:flex;gap:6px"><button class="icon" data-rail="-1" aria-label="Anterior">${ic('left',16)}</button><button class="icon" data-rail="1" aria-label="Próximo">${ic('right',16)}</button></span></div><div class="rail" id="rail">${S.files.map(fileCard).join('')}<button class="dropc" style="${S.files.length?'flex:0 0 280px':''}" data-import="">${ic('up',24)}<b>Importar arquivos</b><span>Clique aqui ou arraste para qualquer parte da tela</span></button></div></section>
   </div><div class="col">
   <section class="card panel"><div class="ch"><div><h2>Favoritos</h2><div class="big m">${favs.length}</div><p class="sub">acesso rápido</p></div><div class="tile lg t-amber">${ic('star',30)}</div></div><div class="rows">${favs.length?favs.slice(0,6).map(f=>`<button class="ri" data-find="${esc(f.title)}"><span class="ring">${ic('star',13)}</span><span><b>${esc(f.title)}</b><small>${f.t==='calc'?'Calculadora':CATS[f.cat][0]}</small></span></button>`).join(''):'<p class="sub">Marque a estrela de um item para deixá-lo aqui.</p>'}</div></section>
-  <section class="card panel"><div class="ch"><div><h2>Calculadoras</h2><p class="sub" style="margin-top:4px">fórmulas do plantão</p></div><div class="tile lg t-cyan">${ic('calc',30)}</div></div><div class="rows">${CALCS.map(c=>`<button class="ri" data-calcgo="${c.id}"><span><b>${esc(c.title)}</b><small>${esc(c.desc)}</small></span>${ic('right',15)}</button>`).join('')}</div></section>
+  <section class="card panel"><div class="ch"><div><h2>Calculadoras</h2><p class="sub" style="margin-top:4px">fórmulas do plantão</p></div><div class="tile lg t-cyan">${ic('calc',30)}</div></div><div class="rows">${CALCS.slice(0,5).map(c=>`<button class="ri" data-calcgo="${c.id}"><span><b>${esc(c.title)}</b><small>${esc(c.desc)}</small></span>${ic('right',15)}</button>`).join('')}</div><button class="sec" style="width:100%;margin-top:10px" data-go="calc">Ver todas as ${CALCS.length}</button></section>
   </div></div>`;
 }
 function filesView(){
-  return`<div class="head"><p>Gerencie o que foi importado.</p><button class="sec" data-template>Baixar modelo de doses</button></div>${S.files.length?`<section class="card panel" style="padding:10px 20px">${S.files.map(f=>{const t=FT[f.ext];return`<div class="ft"><div class="ext" style="--a:${t[0]};--b:${t[1]}">${esc(f.ext.slice(0,4).toUpperCase())}</div><div style="min-width:0"><b title="${esc(f.name)}">${esc(f.name)}</b><small>${new Date(f.at).toLocaleDateString('pt-BR')} · ${size(f.size)}</small></div><div class="fsel"><select class="sel" style="margin:0" data-fc="${f.id}" aria-label="Categoria de ${esc(f.name)}">${catOpts(f.cat)}</select></div><small class="fn">${f.recs[0]?.doc?'Documento':plural(f.recs.length,'registro','registros')}</small><div><button class="icon" data-open="${f.id}" aria-label="Abrir ${esc(f.name)}" title="Abrir">${ic('open',16)}</button><button class="icon" data-del="${f.id}" aria-label="Excluir ${esc(f.name)}" title="Excluir">${ic('trash',16)}</button></div></div>`}).join('')}</section>`:emptyBox('box','Nenhum arquivo importado','CSV, TSV, XLSX, JSON, TXT, MD, DOCX, PDF e imagens.')}`;
+  return`<div class="head"><p>Gerencie o que foi importado. O backup guarda arquivos e favoritos, sem criptografia.</p><div class="hbtn"><button class="sec" data-new="">${ic('plus',15)}Novo registro</button><button class="sec" data-backup>${ic('down',15)}Exportar backup</button><button class="sec" data-restore>${ic('up',15)}Restaurar backup</button><button class="sec" data-template>Baixar modelo de doses</button></div></div>${S.files.length?`<section class="card panel" style="padding:10px 20px">${S.files.map(f=>{const t=FT[f.ext];return`<div class="ft"><div class="ext" style="--a:${t[0]};--b:${t[1]}">${esc(f.ext.slice(0,4).toUpperCase())}</div><div style="min-width:0"><b title="${esc(f.name)}">${esc(f.name)}</b><small>${new Date(f.at).toLocaleDateString('pt-BR')} · ${size(f.size)}</small></div><div class="fsel"><select class="sel" style="margin:0" data-fc="${f.id}" aria-label="Categoria de ${esc(f.name)}">${catOpts(f.cat)}</select></div><small class="fn">${f.recs[0]?.doc?'Documento':plural(f.recs.length,'registro','registros')}</small><div><button class="icon" data-open="${f.id}" aria-label="Abrir ${esc(f.name)}" title="Abrir">${ic('open',16)}</button><button class="icon" data-del="${f.id}" aria-label="Excluir ${esc(f.name)}" title="Excluir">${ic('trash',16)}</button></div></div>`}).join('')}</section>`:emptyBox('box','Nenhum arquivo importado','CSV, TSV, XLSX, JSON, TXT, MD, DOCX, PDF e imagens.')}`;
 }
 function search(t){const T=norm(t).split(/\s+/).filter(Boolean);return{T,a:[...S.recs,...calcs()].filter(i=>T.every(x=>i.hay.includes(x))).map(i=>[i,T.reduce((s,x)=>s+(i.nt.startsWith(x)?3:i.nt.includes(x)?2:0),0)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0])}}
-function runCalcs(){view.querySelectorAll('[data-calc]').forEach(el=>{const c=CALCS.find(x=>x.id===el.dataset.calc),v={};let ok=true;el.querySelectorAll('[data-k]').forEach(i=>{if(i.tagName==='SELECT')v[i.dataset.k]=i.value;else{const n=parseFloat(i.value);if(!(n>0))ok=false;v[i.dataset.k]=n}});const o=el.querySelector('.out');o.textContent=ok?c.run(v):'Preencha os campos';o.classList.toggle('w',!ok)})}
+function runCalcs(){view.querySelectorAll('[data-calc]').forEach(el=>{const c=CALCS.find(x=>x.id===el.dataset.calc),v={},raw=S.cv[c.id]={};let ok=true;el.querySelectorAll('[data-k]').forEach(i=>{const k=i.dataset.k;if(i.type==='checkbox'){raw[k]=i.checked;v[k]=i.checked?+i.dataset.p:0}else if(i.tagName==='SELECT')raw[k]=v[k]=i.value;else{raw[k]=i.value;const n=parseFloat(i.value);if(!(n>0))ok=false;v[k]=n}});const r=ok?c.run(v):null,o=el.querySelector('.out');o.textContent=r||(ok?'Confira os valores':'Preencha os campos');o.classList.toggle('w',!r)})}
 function navHTML(){const t=q.value.trim(),b=(id,l,i,n)=>`<button data-go="${id}" class="${!t&&S.view===id?'on':''}" ${!t&&S.view===id?'aria-current="page"':''}>${ic(i)}<span>${l}</span><span class="n">${n??''}</span></button>`;
   $('#nav').innerHTML=NAV.map(([id,l,i])=>b(id,l,i,CATS[id]?count(id)||'':id==='fav'?S.favs.length||'':id==='calc'?CALCS.length:'')).join('');$('#nav2').innerHTML=b('files','Arquivos','up',S.files.length||'');
   $('#seg').innerHTML=[['light','sun','Tema claro'],['dark','moon','Tema escuro']].map(([k,i,l])=>`<button data-theme-set="${k}" class="${S.theme===k?'on':''}" aria-label="${l}" aria-pressed="${S.theme===k}">${ic(i,15)}</button>`).join('')}
 function render(){
   document.documentElement.dataset.theme=S.theme;navHTML();const t=q.value.trim(),v=S.view;let h,title;
-  if(t){const r=search(t);title=`Busca <span>${r.a.length}</span>`;h=r.a.length?cards(r.a,r.T):`<div class="panel empty"><b>Nada encontrado</b><span>Tente outro termo ou importe mais arquivos.</span></div>`}
+  if(t){const r=search(t),kind=i=>i.t==='calc'?'calc':i.cat,has=[...CK,'calc'].map(k=>[k,k==='calc'?'Calculadoras':CATS[k][0],r.a.filter(i=>kind(i)===k).length]).filter(x=>x[2]),f=has.some(x=>x[0]===S.sf)?S.sf:'all',a=f==='all'?r.a:r.a.filter(i=>kind(i)===f);title=`Busca <span>${a.length}</span>`;h=a.length?(has.length>1?chips([['all','Todos',r.a.length],...has],f,'sf'):'')+cards(a,r.T):`<div class="panel empty"><b>Nada encontrado</b><span>Tente outro termo ou importe mais arquivos.</span></div>`}
   else if(v==='home'){const d=new Date(),m=d.toLocaleDateString('pt-BR',{month:'long'});title=`${m[0].toUpperCase()+m.slice(1)} <span>${d.getFullYear()}</span>`;h=home()}
-  else if(CATS[v]){const a=S.recs.filter(r=>r.cat===v);title=`${CATS[v][0]} <span>${a.length||''}</span>`;h=a.length?cards(a):emptyBox(CATS[v][1],`Nada em ${CATS[v][0].toLowerCase()} ainda`,'Importe um arquivo para preencher esta seção.',v)}
-  else if(v==='calc'){title='Calculadoras';h=cards(calcs())}
+  else if(CATS[v]){const a=S.recs.filter(r=>r.cat===v);title=`${CATS[v][0]} <span>${a.length||''}</span>`;h=a.length?`<div class="head"><p>Em ordem alfabética.</p><button class="sec" data-new="${v}">${ic('plus',15)}Novo registro</button></div>`+cards(byTitle(a)):emptyBox(CATS[v][1],`Nada em ${CATS[v][0].toLowerCase()} ainda`,'Importe um arquivo para preencher esta seção.',v)}
+  else if(v==='calc'){const all=calcs(),a=S.cg==='all'?all:all.filter(c=>c.g===S.cg);title=`Calculadoras <span>${a.length}</span>`;h=`<div class="head"><p>Apoio ao cálculo. Confira os valores antes de usar.</p></div>`+chips(Object.entries(CG).map(([k,l])=>[k,l,k==='all'?all.length:all.filter(c=>c.g===k).length]),S.cg,'cg')+cards(a)}
   else if(v==='fav'){const a=[...S.recs,...calcs()].filter(i=>S.favs.includes(i.id));title='Favoritos';h=a.length?cards(a):'<div class="panel empty"><b>Nenhum favorito ainda</b><span>Marque a estrela de um item para encontrá-lo aqui.</span></div>'}
   else{title='Arquivos';h=filesView()}
   $('#title').innerHTML=title;view.innerHTML=h;runCalcs();
 }
 async function copy(text,b){try{await navigator.clipboard.writeText(text)}catch{const a=document.createElement('textarea');a.value=text;document.body.append(a);a.select();document.execCommand('copy');a.remove()}toast('Copiado');b.blur()}
-const go=v=>{S.view=v;q.value='';render();scrollTo(0,0)};
+const go=v=>{S.view=v;S.sf='all';q.value='';render();scrollTo(0,0)};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if('import' in d){S.cat=d.import;$('#file').value='';$('#file').click()}
   else if(d.go)go(d.go);
   else if(d.themeSet){S.theme=d.themeSet;lset('pp.theme',S.theme);render()}
   else if(d.fav){S.favs=S.favs.includes(d.fav)?S.favs.filter(x=>x!==d.fav):[...S.favs,d.fav];lset('pp.favs',S.favs);render()}
-  else if(d.find){q.value=d.find;render();scrollTo(0,0)}
-  else if(d.calcgo){go('calc');document.getElementById(d.calcgo)?.scrollIntoView({block:'center'});document.querySelector('#'+d.calcgo+' input')?.focus({preventScroll:true})}
+  else if(d.find){S.sf='all';q.value=d.find;render();scrollTo(0,0)}
+  else if(d.sf){S.sf=d.sf;render()}
+  else if(d.cg){S.cg=d.cg;render()}
+  else if('new' in d)newRec(d.new);
+  else if('savenew' in d)saveNew();
+  else if('backup' in d)exportBackup();
+  else if('restore' in d){$('#restore').value='';$('#restore').click()}
+  else if(d.ccopy){const c=CALCS.find(x=>x.id===d.ccopy),o=document.getElementById(c.id).querySelector('.out');if(o.classList.contains('w'))toast('Ainda não há resultado para copiar');else copy(c.title+': '+o.textContent,b)}
+  else if(d.cclear){delete S.cv[d.cclear];render()}
+  else if(d.calcgo){S.cg='all';go('calc');document.getElementById(d.calcgo)?.scrollIntoView({block:'center'});document.querySelector('#'+d.calcgo+' input')?.focus({preventScroll:true})}
   else if(d.rail)$('#rail').scrollBy({left:d.rail*296,behavior:'smooth'});
   else if('template' in d)template();
   else if(d.copy){const r=S.recs.find(x=>x.id===d.copy);copy([r.title,...(r.fields||[]).map(([k,v])=>k+': '+v),r.text].filter(Boolean).join('\n'),b)}
@@ -392,14 +501,14 @@ document.addEventListener('click',async e=>{
   else if('commit' in d)commit();
 });
 document.addEventListener('change',async e=>{const t=e.target,d=t.dataset;
-  if(t.id==='file')prepare(t.files);else if(d.pc)S.pending[d.pc].cat=t.value;else if(d.rep)S.pending[d.rep].replace=t.checked;
+  if(t.id==='file')prepare(t.files);else if(t.id==='restore')restoreBackup(t.files[0]);else if(d.pc)S.pending[d.pc].cat=t.value;else if(d.rep)S.pending[d.rep].replace=t.checked;
   else if(d.fc){const f=S.files.find(x=>x.id===d.fc);f.cat=t.value;await dbPut(f);reload()}
   else if(t.closest('[data-calc]'))runCalcs()});
 document.addEventListener('input',e=>{if(e.target.closest('[data-calc]'))runCalcs()});
 const hover=e=>{const k=e.target.closest?.('[data-hk],.arc')?.dataset[e.target.closest('[data-hk]')?'hk':'k'],l=$('#dl'),v=$('#dv');if(!l)return;l.textContent=k?CATS[k][0]:'Total';v.textContent=(k?count(k):S.recs.length).toLocaleString('pt-BR');view.querySelectorAll('.arc').forEach(a=>a.style.opacity=!k||a.dataset.k===k?1:.3)};
 view.addEventListener('mouseover',hover);
-q.addEventListener('input',render);
-kg.addEventListener('input',()=>{if(S.view==='calc'&&!q.value.trim()){const w=weight();view.querySelectorAll('[data-k=peso]').forEach(i=>i.value=w||'');runCalcs()}else render()});
+q.addEventListener('input',()=>{S.sf='all';render()});
+kg.addEventListener('input',()=>{Object.values(S.cv).forEach(v=>delete v.peso);if(S.view==='calc'&&!q.value.trim()){const w=weight();view.querySelectorAll('[data-k=peso]').forEach(i=>i.value=w||'');runCalcs()}else render()});
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();q.focus();q.select()}else if(e.key==='Escape'&&document.activeElement===q){q.value='';render()}});
 const hasFiles=e=>[...(e.dataTransfer?.types||[])].includes('Files');
 addEventListener('dragover',e=>{if(hasFiles(e)){e.preventDefault();$('#drop').classList.add('on')}});
