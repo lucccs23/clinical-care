@@ -1,7 +1,7 @@
 {
   "name": "painel-plantao",
   "productName": "Painel de Plantão",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Consulta clínica offline para o plantão",
   "author": "Painel de Plantão",
   "private": true,
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "electron .",
     "test": "playwright test",
-    "dist": "electron-builder --win nsis"
+    "dist": "electron-builder --win nsis --publish never"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
@@ -19,11 +19,21 @@
   },
   "build": {
     "appId": "local.painel.plantao",
-    "directories": { "output": "../dist/desktop", "buildResources": "build" },
+    "directories": {
+      "output": "../dist/desktop",
+      "buildResources": "build"
+    },
     "files": [
       "main.js",
+      "preload.cjs",
       "build/icon.png",
-      { "from": "..", "to": "app", "filter": ["index.html"] }
+      {
+        "from": "..",
+        "to": "app",
+        "filter": [
+          "index.html"
+        ]
+      }
     ],
     "electronFuses": {
       "runAsNode": false,
@@ -31,13 +41,27 @@
       "enableNodeCliInspectArguments": false,
       "onlyLoadAppFromAsar": true
     },
-    "win": { "target": "nsis", "icon": "build/icon.png" },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
       "deleteAppDataOnUninstall": false,
       "shortcutName": "Painel de Plantão",
       "artifactName": "Painel-de-Plantao-Instalador-${version}.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "lucccs23",
+        "repo": "clinical-care",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
   }
 }
