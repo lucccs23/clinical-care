@@ -212,3 +212,70 @@ test('mantém os arquivos de quem já usava a versão anterior do banco', async 
   await createScenario(page, 'Depois da migração', [{ Medicamento: 'Droga Nova' }]);
   await expect(page.locator('#title')).toHaveText('Depois da migração');
 });
+
+test('guarda alternativas de cada medicamento, mostra, copia e acha na busca', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await menu(page, 'Prescrições').click();
+  await page.getByRole('button', { name: 'Novo cenário' }).click();
+  await editor(page).getByLabel('Nome do cenário').fill('Indução fictícia');
+  await fillRow(page, 0, { Medicamento: 'Droga Principal', 'Dose e posologia': '1 unidade/kg' });
+  const alt = (n) => editor(page).getByRole('group', { name: `Alternativa ${n} do medicamento 1` });
+
+  await editor(page).getByRole('button', { name: 'Adicionar alternativa ao medicamento 1' }).click();
+  await expect(alt(1).getByLabel('Alternativa', { exact: true })).toBeFocused();
+  await alt(1).getByLabel('Alternativa', { exact: true }).fill('Droga Segunda');
+  await alt(1).getByLabel('Dose e posologia').fill('2 unidades/kg');
+  await alt(1).getByLabel('Observações').fill('Se a principal faltar');
+  await editor(page).getByRole('button', { name: 'Adicionar alternativa ao medicamento 1' }).click();
+  await alt(2).getByLabel('Dose e posologia').fill('sem nome');
+  await editor(page).getByRole('button', { name: 'Salvar cenário' }).click();
+  await expect(editor(page)).toContainText('Preencha o nome de cada alternativa ou remova a linha.');
+  await alt(2).getByLabel('Alternativa', { exact: true }).fill('Droga Terceira');
+  // Mover o medicamento leva as alternativas junto.
+  await editor(page).getByRole('button', { name: 'Adicionar medicamento' }).click();
+  await fillRow(page, 1, { Medicamento: 'Droga Outra' });
+  await editor(page).getByRole('button', { name: 'Descer medicamento 1' }).click();
+  await expect(editor(page).getByRole('group', { name: 'Alternativa 1 do medicamento 2' }).getByLabel('Alternativa', { exact: true })).toHaveValue('Droga Segunda');
+  await editor(page).getByRole('button', { name: 'Subir medicamento 2' }).click();
+  await editor(page).getByRole('button', { name: 'Salvar cenário' }).click();
+  await expect(editor(page)).toBeHidden();
+
+  const first = page.locator('.rxi').first();
+  await expect(first.locator('.rxalt li')).toHaveCount(2);
+  await expect(first.locator('.rxalt li').first()).toContainText('Droga Segunda2 unidades/kgSe a principal faltar');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({ path: evidence('cenario-alternativas') });
+
+  await page.getByRole('button', { name: 'Copiar prescrição' }).click();
+  expect((await page.evaluate(() => navigator.clipboard.readText())).replaceAll('\r\n', '\n')).toBe(
+    'Indução fictícia\n\n1. Droga Principal\n   1 unidade/kg\n   Alternativa: Droga Segunda · 2 unidades/kg · Se a principal faltar\n   Alternativa: Droga Terceira · sem nome\n2. Droga Outra',
+  );
+
+  await page.getByRole('button', { name: 'Editar' }).click();
+  await editor(page).getByRole('button', { name: 'Remover alternativa 2 do medicamento 1' }).click();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({ path: evidence('editor-alternativas') });
+  await editor(page).getByRole('button', { name: 'Salvar cenário' }).click();
+  await expect(first.locator('.rxalt li')).toHaveCount(1);
+
+  await page.reload();
+  await page.getByRole('searchbox', { name: 'Buscar' }).fill('droga segunda');
+  await page.getByRole('button', { name: /^Indução fictícia/ }).click();
+  await expect(page.locator('.rxalt')).toContainText('Droga Segunda');
+});
+
+test('importa alternativas e recusa alternativas inválidas', async ({ page }) => {
+  await page.locator('#file').setInputFiles(cenariosFicticios());
+  await page.locator('[data-commit]').click();
+  await menu(page, 'Prescrições').click();
+  await page.getByRole('button', { name: /^Cenário Alfa/ }).click();
+  await expect(page.locator('.rxalt')).toContainText('Droga Reserva');
+
+  const invalido = (alts) =>
+    file('alts.json', JSON.stringify({ tipo: 'cenarios-prescricao', versao: 1, cenarios: [{ title: 'X', items: [{ droga: 'Y', alts }] }] }), 'application/json');
+  for (const alts of ['texto', [{ posologia: 'sem nome' }], [{ droga: 'Z', obs: 3 }]]) {
+    await page.locator('#file').setInputFiles(invalido(alts));
+    await expect(page.getByRole('dialog', { name: 'Importar arquivos' })).toContainText('Cenários em formato inválido');
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+  }
+});
