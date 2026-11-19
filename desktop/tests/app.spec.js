@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { _electron as electron, expect, test } from '@playwright/test';
 import { file, txt } from '../../.claude/skills/verify/fixtures.js';
 
+const { version } = JSON.parse(await readFile(join(import.meta.dirname, '..', 'package.json'), 'utf8'));
+
 let profile;
 let app;
 let page;
@@ -124,7 +126,7 @@ test('conduz a atualização pelo botão, sem expor o sistema à página', async
   ]);
   await page.getByRole('button', { name: 'Buscar atualizações' }).click();
   const dialog = page.getByRole('dialog', { name: 'Atualizações' });
-  await expect(dialog).toContainText('Versão instalada: 1.1.0');
+  await expect(dialog).toContainText(`Versão instalada: ${version}`);
   await dialog.getByRole('button', { name: 'Buscar agora' }).click();
   await expect(dialog).toContainText('Disponível apenas no programa instalado');
 
@@ -151,7 +153,7 @@ test('conduz a atualização pelo botão, sem expor o sistema à página', async
   await app.evaluate(() => globalThis.sendUpdate({ status: 'available', version: '9.9.9' }));
   await dialog.getByRole('button', { name: 'Baixar atualização' }).click();
   await dialog.getByRole('button', { name: 'Reiniciar e instalar' }).click();
-  expect(await page.evaluate(() => window.painelApp.info().then((info) => info.version))).toBe('1.1.0');
+  expect(await page.evaluate(() => window.painelApp.info().then((info) => info.version))).toBe(version);
   expect(await app.evaluate(() => globalThis.calls)).toEqual(['install']);
 });
 
