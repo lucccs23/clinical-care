@@ -10,3 +10,16 @@ test('abre o Orvia sem erros de página', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Biblioteca clínica' })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('mostra o logo do Orvia na barra e na aba, embutidos no arquivo', async ({ page }) => {
+  await page.goto('/');
+  // O logo usa a cor do tema: muda junto com a aparência escolhida.
+  const logo = page.locator('#logo svg');
+  await expect(logo).toBeVisible();
+  const color = () => logo.evaluate((svg) => getComputedStyle(svg).color);
+  const dark = await color();
+  await page.getByRole('button', { name: 'Mais temas' }).click();
+  await page.getByRole('button', { name: /Alto contraste/ }).click();
+  expect(await color()).not.toBe(dark);
+  expect(await page.locator('link[rel="icon"]').getAttribute('href')).toMatch(/^data:image\/svg\+xml,/);
+});

@@ -1,7 +1,7 @@
 {
   "name": "orvia",
   "productName": "Orvia",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Consulta clínica offline para o plantão",
   "author": "Orvia",
   "private": true,
