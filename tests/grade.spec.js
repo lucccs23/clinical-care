@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { allFormats } from '../.claude/skills/verify/fixtures.js';
-import { cenariosFicticios } from './dados-ficticios.js';
+import { cenariosFicticios, pdfFicticio } from './dados-ficticios.js';
 
 // Mede a tela renderizada: espaços em múltiplos de 4, controles em múltiplos de 8 e linhas na base de 4.
 const SPACING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'rowGap', 'columnGap'];
@@ -61,6 +61,10 @@ async function screens(page) {
   checks.cenario = await offGrid(page);
   await page.getByRole('button', { name: 'Editar' }).click();
   checks.editor = await offGrid(page);
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await page.locator('#chapter').setInputFiles(pdfFicticio([['Droga Teste', '1 mg/kg EV'], ['Texto sem dose']]));
+  await page.getByRole('dialog', { name: 'Ler capítulo' }).locator('.chr input').first().check();
+  checks.leitor = await offGrid(page);
   await page.getByRole('button', { name: 'Cancelar' }).click();
   return Object.fromEntries(Object.entries(checks).filter(([, errors]) => errors.length));
 }

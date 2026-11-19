@@ -172,7 +172,7 @@ select option{background:var(--panel)}
 .chip:hover{color:var(--accent-t)}.chip.on{color:var(--text);border-bottom-color:var(--accent)}
 .chip span{font:400 var(--t-xs) var(--mono);color:var(--muted);margin-left:var(--s-half)}
 mark{background:color-mix(in srgb,var(--amber) 32%,transparent);color:inherit;border-radius:2px;padding:0}
-.ft{display:grid;grid-template-columns:var(--s6) minmax(0,1fr) 152px 88px 88px;align-items:center;gap:var(--s2);padding:var(--s1-5) 0;border-top:1px solid var(--line)}
+.ft{display:grid;grid-template-columns:var(--s6) minmax(0,1fr) 152px 88px 104px;align-items:center;gap:var(--s2);padding:var(--s1-5) 0;border-top:1px solid var(--line)}
 .ft:first-child{border-top:0}.ft b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ft small{color:var(--muted);font-size:13px;line-height:20px}
 .ft>div:last-child{display:flex;gap:var(--s1);justify-content:flex-end}
 .flist{padding:var(--s1) var(--s3)}
@@ -186,12 +186,25 @@ dialog h2{font-size:20px;line-height:28px}
 .ii b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ii small{display:block;color:var(--muted);font-size:13px;line-height:20px}.ii .bad{color:var(--red)}
 .ii label{display:flex;align-items:center;gap:var(--s1);margin-top:var(--s-half)}
 .priv{background:var(--inset);border-radius:var(--r2);padding:var(--s1-5) var(--s2);font-size:14px;line-height:20px;color:var(--soft);margin:var(--s2) 0 var(--s3)}
-.da{display:flex;justify-content:flex-end;gap:var(--s1)}.da .sec{height:var(--h-m)}
+.da{display:flex;justify-content:flex-end;gap:var(--s1)}.da .sec,.sec.m{height:var(--h-m)}
 .stackf{display:grid;gap:var(--s2);margin:var(--s2) 0 0}
 .stackf input,.stackf select,.stackf textarea{display:block;width:100%;margin-top:var(--s-half);padding:var(--s1);background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);color:var(--text)}
 .stackf input,.stackf select{height:var(--h-m)}
 .stackf textarea{min-height:192px;resize:vertical}
 .err{color:var(--red);font-size:14px;line-height:20px;min-height:20px}
+dialog[data-size=l]{width:min(880px,calc(100vw - var(--s4)))}
+dialog[data-size=l][open]{display:flex;flex-direction:column}dialog[data-size=l]>*{flex:none}
+dialog[data-size=l] .chl{flex:1 1 auto;min-height:160px;max-height:none}
+.chf{grid-template-columns:repeat(2,minmax(0,1fr))}
+.chbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:var(--s1) var(--s2);margin:var(--s2) 0 var(--s1)}
+.chbar>.stackf{flex:1 1 240px;margin:0}.chbar .hbtn{display:flex;flex-wrap:wrap;gap:var(--s1)}
+.chk{display:flex;align-items:center;gap:var(--s1);height:var(--h-m);font-size:14px;line-height:20px}
+.chl{max-height:min(416px,48vh);overflow:auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.chr{display:grid;grid-template-columns:var(--s2) auto minmax(0,1fr);gap:var(--s1-5);align-items:start;padding:var(--s1-5) 0;border-top:1px solid var(--line);font-size:14px;line-height:20px;cursor:pointer}
+.chr:first-child{border-top:0}.chr input{margin-top:var(--s-half)}
+.cht{min-width:0;overflow-wrap:anywhere}.cht small{display:block;color:var(--muted);font-size:12px;line-height:16px}
+.chn{padding:var(--s2) 0}
+@media(max-width:520px){.chf{grid-template-columns:minmax(0,1fr)}}
 .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:var(--s1);margin:var(--s2) 0}
 .tcard{display:flex;flex-direction:column;gap:var(--s-half);padding:var(--s1);border:1px solid var(--line);border-radius:var(--r2);text-align:left}
 .tcard:hover{border-color:var(--accent)}.tcard.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -273,6 +286,7 @@ fieldset.rxe{margin:0;padding:var(--s2);border:1px solid var(--line);border-radi
 </div>
 <input id="file" type="file" multiple hidden accept=".csv,.tsv,.xlsx,.json,.txt,.md,.docx,.pdf,.png,.jpg,.jpeg,.webp">
 <input id="restore" type="file" hidden accept=".json">
+<input id="chapter" type="file" hidden accept=".pdf,application/pdf">
 <dialog id="dlg" aria-labelledby="dt"></dialog>
 <div id="drop"><div>Solte os arquivos para importar</div></div>
 <div id="toast" role="status"></div>
@@ -442,7 +456,7 @@ async function commit(){
   catch{toast('Não foi possível salvar. Verifique o espaço do navegador')}
   lset('pp.favs',S.favs);await reload();closeDialog();if(n||m)toast([n&&plural(n,'arquivo','arquivos'),m&&plural(m,'cenário','cenários')].filter(Boolean).join(' e ')+(n+m===1?' importado':' importados'));
 }
-function closeDialog(){dlg.close();dlg.innerHTML='';S.pending=[];S.cat='';S.updOpen=false;S.themeOpen=false;S.edit=null}
+function closeDialog(){dlg.close();dlg.innerHTML='';S.pending=[];S.cat='';S.updOpen=false;S.themeOpen=false;S.edit=null;S.chap=null;S.chapRun=null;delete dlg.dataset.size}
 dlg.addEventListener('cancel',e=>{e.preventDefault();closeDialog()});
 function openFile(id){const f=S.files.find(x=>x.id===id),t=f&&FT[f.ext];if(!f)return;const type=t[2];const u=URL.createObjectURL(type?new Blob([f.blob],{type}):f.blob);if(type)window.open(u,'_blank','noopener');else{const a=document.createElement('a');a.href=u;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(u),60000)}
 function template(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿medicamento;indicacao;posologia;dose_min_kg;dose_max_kg;dose_maxima;dose_minima;unidade;concentracao;tomadas_dia;observacoes\r\n'],{type:'text/csv'}));a.download='modelo-doses.csv';a.click();URL.revokeObjectURL(a.href)}
@@ -464,10 +478,11 @@ async function saveNew(){
 /* Cenários de prescrição */
 const sameTitle=(a,b)=>norm(a.title).trim()===norm(b.title).trim();
 const blankRx=()=>({droga:'',apresentacao:'',posologia:'',via:'',obs:'',ref:''});
-function openCenEdit(id){
+function openCenEdit(id,add){
   const c=id&&S.cens.find(x=>x.id===id);
   S.edit=c?{id:c.id,title:c.title,note:c.note||'',items:c.items.map(i=>({...blankRx(),...i}))}:{id:null,title:'',note:'',items:[blankRx()]};
-  drawCenEdit();dlg.showModal();$('#ct').focus();
+  if(add){S.edit.items=[...S.edit.items.filter(i=>RXF.some(([k])=>String(i[k]).trim())),...add.items];if(!c)S.edit.title=add.title}
+  drawCenEdit();if(!dlg.open)dlg.showModal();$('#ct').focus();
 }
 function syncEdit(){
   const e=S.edit;e.title=$('#ct').value;e.note=$('#cn').value;
@@ -493,6 +508,103 @@ async function deleteCen(id){
   const c=S.cens.find(x=>x.id===id);if(!c||!confirm(`Excluir o cenário "${c.title}"?`))return;
   try{await cenDel(id)}catch{return toast('Não foi possível excluir')}
   S.favs=S.favs.filter(x=>x!=='cen:'+id);lset('pp.favs',S.favs);S.cen=null;toast('Cenário excluído');await reload();
+}
+
+/* Leitor de capítulos em PDF */
+const MAX_PAGES=600,SHOW=300;
+// Número (ou faixa) seguido de unidade de dose, com divisões como /kg/min; e intervalos como 6/6 h.
+const DOSE=/\d+(?:[.,]\d+)?(?:\s*(?:-|–|a|até)\s*\d+(?:[.,]\d+)?)?\s*(?:mcg|µg|μg|mg|ng|g|UI|unidades?|U|mEq|mmol|mL|ml|litros?|L|gotas?|gts|microgotas|ampolas?|amp|comprimidos?|comp|cp|frascos?|%)(?:\s*\/\s*(?:kg|m²|m2|h|hora|min|dia|dose))*(?![\p{L}\d])|\d+\s*\/\s*\d+\s*h(?![\p{L}\d])/giu;
+const DOSE1=new RegExp(DOSE.source,'iu'),NEWDRUG=/^\p{Lu}\p{Ll}{2,}/u;
+const VERB=/^(?:diluir|dose|doses|administrar|fazer|iniciar|manter|repetir|infundir|ataque|manutenção|bolus|em|de|até|a|e|ou)$/i;
+const markDose=t=>{let out='',i=0;for(const m of t.matchAll(DOSE)){out+=esc(t.slice(i,m.index))+'<mark>'+esc(m[0])+'</mark>';i=m.index+m[0].length}return out+esc(t.slice(i))};
+function pageLines(items){
+  const out=[];let cur='',y=null;const push=()=>{const s=cur.replace(/\s+/g,' ').trim();if(s)out.push(s);cur=''};
+  for(const it of items){
+    if(typeof it.str!=='string')continue;const iy=it.transform?.[5];
+    if(cur.trim()&&y!=null&&iy!=null&&Math.abs(iy-y)>Math.max(2,(it.height||10)/2))push();
+    cur+=it.str;if(it.str.trim())y=iy??y;if(it.hasEOL)push();
+  }
+  push();
+  // Junta palavras hifenizadas na quebra de linha, como "adminis-" + "tração".
+  for(let i=0;i<out.length-1;i++)if(/\p{L}-$/u.test(out[i])&&/^\p{Ll}/u.test(out[i+1])){out[i]=out[i].slice(0,-1)+out[i+1];out.splice(i+1,1);i--}
+  return out;
+}
+function drugGuess(t,prev){
+  const cut=t.search(/\d/);let g=(cut<0?t:t.slice(0,cut)).replace(/[\s:;,.(–-]+$/,'').trim();
+  if(g.length<3||VERB.test(g.split(/\s+/)[0]))g=prev&&prev.length<=60&&!/\d/.test(prev)?prev.replace(/[\s:;,.]+$/,''):'';
+  // Começo em minúscula é meio de frase, não nome de medicamento.
+  return /^\p{Lu}/u.test(g)?g.split(/\s+/).slice(0,6).join(' ').slice(0,80):'';
+}
+const chapHead=s=>`<h2 id="dt">Ler capítulo</h2><p class="sub" id="chp">${s}</p>`;
+function chapFail(run,name,m){
+  if(S.chapRun!==run)return;S.chapRun=null;
+  dlg.innerHTML=chapHead(esc(name))+`<p class="err" role="alert">${esc(m)}</p><div class="da"><button class="sec" data-cancel>Fechar</button><button class="pri" data-chapter>Escolher outro PDF</button></div>`;
+}
+async function readChapter(blob,name){
+  const run=S.chapRun={};S.chap=null;S.edit=null;dlg.dataset.size='l';
+  dlg.innerHTML=chapHead(`Lendo ${esc(name)}…`)+'<div class="da"><button class="sec" data-cancel>Cancelar</button></div>';if(!dlg.open)dlg.showModal();
+  const fail=m=>chapFail(run,name,m);
+  if(!/\.pdf$/i.test(name))return fail('Escolha um arquivo PDF.');
+  if(!blob.size)return fail('O arquivo está vazio.');
+  if(blob.size>MAX_MB*1048576)return fail('O PDF é maior que '+MAX_MB+' MB.');
+  // O pdf.js entra como módulo no build e só existe depois que a página termina de carregar.
+  if(document.readyState!=='complete')await new Promise(r=>addEventListener('load',r,{once:true}));
+  const lib=globalThis.pdfjsLib;
+  if(!lib)return fail('O leitor de PDF não está nesta cópia do painel. Use o arquivo gerado pelo build ou o programa instalado.');
+  let task;
+  try{
+    task=lib.getDocument({data:new Uint8Array(await blob.arrayBuffer()),isEvalSupported:false,disableFontFace:true,useSystemFonts:false,enableXfa:false,verbosity:0});
+    const pdf=await task.promise,n=Math.min(pdf.numPages,MAX_PAGES),lines=[];let chars=0;
+    for(let p=1;p<=n;p++){
+      if(S.chapRun!==run)return;
+      $('#chp').textContent=`Lendo ${name}… página ${p} de ${n}`;
+      const page=await pdf.getPage(p),ls=pageLines((await page.getTextContent()).items);page.cleanup();
+      ls.forEach((t,i)=>{chars+=t.length;lines.push({p,t,prev:ls[i-1]||'',dose:DOSE1.test(t)})});
+    }
+    if(S.chapRun!==run)return;
+    if(!chars)return fail('Este PDF não tem texto selecionável. Ele parece digitalizado, e o leitor não reconhece texto em imagens.');
+    S.chapRun=null;
+    S.chap={name,fonte:name.replace(/\.pdf$/i,''),pages:n,total:pdf.numPages,lines,sel:new Set(),all:false,join:true,filter:'',dest:''};
+    drawChapter();
+  }catch(e){fail(e?.name==='PasswordException'?'Este PDF é protegido por senha. Remova a proteção e tente de novo.':'Não foi possível ler este PDF. O arquivo pode estar corrompido.')}
+  finally{task?.destroy()}
+}
+function chapRows(){
+  const c=S.chap,f=norm(c.filter).trim();
+  return c.lines.map((l,i)=>[l,i]).filter(([l])=>(c.all||l.dose)&&(!f||norm(l.t+' '+l.prev).includes(f)));
+}
+function drawChapList(){
+  const c=S.chap,v=chapRows(),shown=v.slice(0,SHOW);
+  $('#chl').innerHTML=shown.length?shown.map(([l,i])=>`<label class="chr"><input type="checkbox" data-chs="${i}" ${c.sel.has(i)?'checked':''}><span class="tag">p. ${l.p}</span><span class="cht">${l.prev?`<small>${esc(l.prev)}</small>`:''}<span>${markDose(l.t)}</span></span></label>`).join(''):'<p class="sub chn">Nenhum trecho com esse filtro.</p>';
+  $('#chc').textContent=plural(v.length,'trecho','trechos')+(v.length>SHOW?` · mostrando ${SHOW}, refine com o filtro`:'');
+  drawChapCount();
+}
+function drawChapCount(){const n=S.chap.sel.size;if(n)$('#che').textContent='';$('[data-chtake]').textContent=n?`Levar ${plural(n,'trecho','trechos')}`:'Levar trechos'}
+function drawChapter(){
+  const c=S.chap,doses=c.lines.filter(l=>l.dose).length;
+  dlg.innerHTML=chapHead(`${esc(c.name)} · ${plural(c.pages,'página','páginas')}${c.total>c.pages?` de ${c.total.toLocaleString('pt-BR')}, limite do leitor`:''} · ${plural(doses,'trecho com dose','trechos com dose')}`)+
+  `<div class="stackf chf"><label>Fonte para a referência<input id="chf" maxlength="120" value="${esc(c.fonte)}" autocomplete="off"></label><label>Levar para<select id="chd"><option value="">Novo cenário</option>${byTitle(S.cens).map(x=>`<option value="${esc(x.id)}" ${x.id===c.dest?'selected':''}>${esc(x.title)}</option>`).join('')}</select></label></div>`+
+  `<div class="chbar"><div class="stackf"><label>Filtrar trechos<input id="chq" type="search" value="${esc(c.filter)}" autocomplete="off" placeholder="Medicamento ou termo"></label></div><label class="chk"><input type="checkbox" id="cha" ${c.all?'checked':''}>Mostrar todas as linhas</label><label class="chk"><input type="checkbox" id="chj" ${c.join?'checked':''}>Juntar linhas próximas no mesmo medicamento</label></div>`+
+  `<div class="chbar"><p class="sub" id="chc" role="status"></p><div class="hbtn"><button class="sec" data-chall>Selecionar visíveis</button><button class="sec" data-chnone>Limpar seleção</button></div></div><div class="chl" id="chl"></div>`+
+  `<p class="err" id="che" role="alert"></p><div class="priv">O filtro procura números com unidade de dose e não entende o texto. Confira cada trecho no original antes de usar. O PDF não é guardado, só os trechos que você levar.</div><div class="da"><button class="sec" data-cancel>Cancelar</button><button class="pri" data-chtake>Levar trechos</button></div>`;
+  drawChapList();
+}
+function takeChapter(){
+  const c=S.chap;if(!c.sel.size){$('#che').textContent='Selecione ao menos um trecho.';return}
+  const fonte=c.fonte.trim()||c.name,dest=S.cens.find(x=>x.id===c.dest);
+  // Em tabelas, uma célula vira várias linhas: trechos próximos da mesma página formam um item,
+  // com as linhas entre eles, até uma linha que comece por nome próprio, como "Droga Beta".
+  const groups=[];
+  for(const i of [...c.sel].sort((a,b)=>a-b)){const g=groups.at(-1),l=c.lines[i];if(c.join&&g&&c.lines[g.end].p===l.p&&i-g.end<=3&&!NEWDRUG.test(l.t))g.end=i;else groups.push({start:i,end:i})}
+  // Quem filtrou por um nome, como "noradrenalina", procura esse medicamento: ele vira o nome do item.
+  const term=c.filter.trim().replace(/\s+/g,' '),tn=norm(term);
+  const items=groups.map(({start,end})=>{
+    const ls=c.lines.slice(start,end+1),l=ls[0],text=ls.map(x=>x.t).join(' '),g=drugGuess(l.t,l.prev);
+    const droga=tn&&norm(text).includes(tn)&&!norm(g).includes(tn)?term[0].toUpperCase()+term.slice(1):g;
+    return{...blankRx(),droga,posologia:text,ref:`${fonte}, p. ${l.p}`};
+  });
+  S.chap=null;delete dlg.dataset.size;
+  openCenEdit(dest?.id||null,{title:fonte,items});
 }
 
 /* Backup */
@@ -595,14 +707,14 @@ function home(){
 }
 function cenList(){
   const a=S.recs.filter(r=>r.cat==='prescricoes');
-  return`<section><div class="head"><div><h2 class="sh">Cenários</h2><p>Monte a prescrição de cada situação clínica.</p></div><button class="pri" data-cenew>${ic('plus',16)}Novo cenário</button></div><div class="cgrid">${byTitle(S.cenItems).map(i=>cenTile(i)).join('')}<button class="ctile add" data-cenew><span class="cic">${ic('plus',20)}</span><span class="ctx"><b>Criar cenário</b><small>Nome, medicamentos e posologia</small></span></button></div></section><section class="secb"><h2 class="sh">Registros e arquivos</h2>${a.length?`<div class="head"><p>Em ordem alfabética.</p><button class="sec" data-new="prescricoes">${ic('plus',15)}Novo registro</button></div>`+cards(byTitle(a)):emptyBox('rx','Nenhum registro de prescrição','Importe arquivos ou escreva um texto livre.','prescricoes')}</section>`;
+  return`<section><div class="head"><div><h2 class="sh">Cenários</h2><p>Monte a prescrição de cada situação clínica.</p></div><div class="hbtn"><button class="sec m" data-chapter>${ic('search',15)}Ler capítulo em PDF</button><button class="pri" data-cenew>${ic('plus',16)}Novo cenário</button></div></div><div class="cgrid">${byTitle(S.cenItems).map(i=>cenTile(i)).join('')}<button class="ctile add" data-cenew><span class="cic">${ic('plus',20)}</span><span class="ctx"><b>Criar cenário</b><small>Nome, medicamentos e posologia</small></span></button></div></section><section class="secb"><h2 class="sh">Registros e arquivos</h2>${a.length?`<div class="head"><p>Em ordem alfabética.</p><button class="sec" data-new="prescricoes">${ic('plus',15)}Novo registro</button></div>`+cards(byTitle(a)):emptyBox('rx','Nenhum registro de prescrição','Importe arquivos ou escreva um texto livre.','prescricoes')}</section>`;
 }
 function cenView(c){
   const it=S.cenItems.find(x=>x.cid===c.id);
   return`<div class="head"><button class="sec" data-go="prescricoes">${ic('left',15)}Prescrições</button><div class="hbtn">${star(it)}<button class="sec" data-cencopy>${ic('copy',15)}Copiar prescrição</button><button class="sec" data-cenedit>Editar</button><button class="sec" data-cendel>${ic('trash',15)}Excluir</button></div></div>${c.note?`<div class="priv cnote">${esc(c.note)}</div>`:''}${c.items.length?`<ol class="rxl">${c.items.map((i,n)=>`<li class="rxi"><span class="rxn">${n+1}</span><div class="rxb"><b>${esc(i.droga)}</b>${i.apresentacao?`<span class="rxa">${esc(i.apresentacao)}</span>`:''}${i.posologia?`<p class="rxp">${esc(i.posologia)}</p>`:''}${i.via||i.obs?`<div class="rxm">${i.via?`<span class="tag">Via ${esc(i.via)}</span>`:''}${i.obs?`<span class="rxo">${esc(i.obs)}</span>`:''}</div>`:''}${i.ref?`<p class="rxr"><span class="tag">Fonte</span>${esc(i.ref)}</p>`:''}</div></li>`).join('')}</ol>`:`<div class="panel empty"><b>Nenhum medicamento ainda</b><span>Adicione os medicamentos deste cenário.</span><button class="pri" data-cenedit>Adicionar medicamentos</button></div>`}`;
 }
 function filesView(){
-  return`<div class="head"><p>Gerencie o que foi importado. O backup guarda arquivos, cenários e favoritos, sem criptografia.</p><div class="hbtn"><button class="sec" data-new="">${ic('plus',15)}Novo registro</button><button class="sec" data-backup>${ic('down',15)}Exportar backup</button><button class="sec" data-restore>${ic('up',15)}Restaurar backup</button><button class="sec" data-template>Baixar modelo de doses</button></div></div>${S.files.length?`<section class="panel flist">${S.files.map(f=>{const t=FT[f.ext];return`<div class="ft"><div class="ext" style="--a:${t[0]};--b:${t[1]}">${esc(f.ext.slice(0,4).toUpperCase())}</div><div style="min-width:0"><b title="${esc(f.name)}">${esc(f.name)}</b><small>${new Date(f.at).toLocaleDateString('pt-BR')} · ${size(f.size)}</small></div><div class="fsel"><select class="sel" style="margin:0" data-fc="${f.id}" aria-label="Categoria de ${esc(f.name)}">${catOpts(f.cat)}</select></div><small class="fn">${f.recs[0]?.doc?'Documento':plural(f.recs.length,'registro','registros')}</small><div><button class="icon" data-open="${f.id}" aria-label="Abrir ${esc(f.name)}" title="Abrir">${ic('open',16)}</button><button class="icon" data-del="${f.id}" aria-label="Excluir ${esc(f.name)}" title="Excluir">${ic('trash',16)}</button></div></div>`}).join('')}</section>`:emptyBox('box','Nenhum arquivo importado','CSV, TSV, XLSX, JSON, TXT, MD, DOCX, PDF e imagens.')}`;
+  return`<div class="head"><p>Gerencie o que foi importado. O backup guarda arquivos, cenários e favoritos, sem criptografia.</p><div class="hbtn"><button class="sec" data-new="">${ic('plus',15)}Novo registro</button><button class="sec" data-backup>${ic('down',15)}Exportar backup</button><button class="sec" data-restore>${ic('up',15)}Restaurar backup</button><button class="sec" data-template>Baixar modelo de doses</button></div></div>${S.files.length?`<section class="panel flist">${S.files.map(f=>{const t=FT[f.ext];return`<div class="ft"><div class="ext" style="--a:${t[0]};--b:${t[1]}">${esc(f.ext.slice(0,4).toUpperCase())}</div><div style="min-width:0"><b title="${esc(f.name)}">${esc(f.name)}</b><small>${new Date(f.at).toLocaleDateString('pt-BR')} · ${size(f.size)}</small></div><div class="fsel"><select class="sel" style="margin:0" data-fc="${f.id}" aria-label="Categoria de ${esc(f.name)}">${catOpts(f.cat)}</select></div><small class="fn">${f.recs[0]?.doc?'Documento':plural(f.recs.length,'registro','registros')}</small><div>${f.ext==='pdf'?`<button class="icon" data-extract="${f.id}" aria-label="Extrair doses de ${esc(f.name)}" title="Extrair doses">${ic('search',16)}</button>`:''}<button class="icon" data-open="${f.id}" aria-label="Abrir ${esc(f.name)}" title="Abrir">${ic('open',16)}</button><button class="icon" data-del="${f.id}" aria-label="Excluir ${esc(f.name)}" title="Excluir">${ic('trash',16)}</button></div></div>`}).join('')}</section>`:emptyBox('box','Nenhum arquivo importado','CSV, TSV, XLSX, JSON, TXT, MD, DOCX, PDF e imagens.')}`;
 }
 function search(t){const T=norm(t).split(/\s+/).filter(Boolean);return{T,a:[...S.recs,...S.cenItems,...calcs()].filter(i=>T.every(x=>i.hay.includes(x))).map(i=>[i,T.reduce((s,x)=>s+(i.nt.startsWith(x)?3:i.nt.includes(x)?2:0),0)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0])}}
 function runCalcs(){view.querySelectorAll('[data-calc]').forEach(el=>{const c=CALCS.find(x=>x.id===el.dataset.calc),v={},raw=S.cv[c.id]={};let ok=true;el.querySelectorAll('[data-k]').forEach(i=>{const k=i.dataset.k;if(i.type==='checkbox'){raw[k]=i.checked;v[k]=i.checked?+i.dataset.p:0}else if(i.tagName==='SELECT')raw[k]=v[k]=i.value;else{raw[k]=i.value;const n=parseFloat(i.value);if(!(n>0))ok=false;v[k]=n}});const r=ok?c.run(v):null,o=el.querySelector('.out');o.textContent=r||(ok?'Confira os valores':'Preencha os campos');o.classList.toggle('w',!r)})}
@@ -655,14 +767,20 @@ document.addEventListener('click',async e=>{
   else if('rowadd' in d){syncEdit();S.edit.items.push(blankRx());drawCenEdit();dlg.querySelector(`[data-row="${S.edit.items.length-1}"] input`).focus()}
   else if(d.rowdel){syncEdit();S.edit.items.splice(+d.rowdel,1);drawCenEdit()}
   else if(d.rowmove){syncEdit();const[i,s]=d.rowmove.split(':').map(Number),a=S.edit.items;[a[i],a[i+s]]=[a[i+s],a[i]];drawCenEdit()}
+  else if('chapter' in d){$('#chapter').value='';$('#chapter').click()}
+  else if(d.extract){const f=S.files.find(x=>x.id===d.extract);if(f)readChapter(f.blob,f.name)}
+  else if('chall' in d){chapRows().slice(0,SHOW).forEach(([,i])=>S.chap.sel.add(i));drawChapList()}
+  else if('chnone' in d){S.chap.sel.clear();drawChapList()}
+  else if('chtake' in d)takeChapter();
   else if('cancel' in d)closeDialog();
   else if('commit' in d)commit();
 });
 document.addEventListener('change',async e=>{const t=e.target,d=t.dataset;
-  if(t.id==='file')prepare(t.files);else if(t.id==='restore')restoreBackup(t.files[0]);else if(d.pc)S.pending[d.pc].cat=t.value;else if(d.rep)S.pending[d.rep].replace=t.checked;
+  if(t.id==='file')prepare(t.files);else if(t.id==='restore')restoreBackup(t.files[0]);else if(t.id==='chapter'){if(t.files[0])readChapter(t.files[0],t.files[0].name)}
+  else if(t.id==='cha'){S.chap.all=t.checked;drawChapList()}else if(t.id==='chd')S.chap.dest=t.value;else if(t.id==='chj')S.chap.join=t.checked;else if(d.chs){S.chap.sel[t.checked?'add':'delete'](+d.chs);drawChapCount()}else if(d.pc)S.pending[d.pc].cat=t.value;else if(d.rep)S.pending[d.rep].replace=t.checked;
   else if(d.fc){const f=S.files.find(x=>x.id===d.fc);f.cat=t.value;await dbPut(f);reload()}
   else if(t.closest('[data-calc]'))runCalcs()});
-document.addEventListener('input',e=>{if(e.target.closest('[data-calc]'))runCalcs()});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='chq'){S.chap.filter=t.value;drawChapList()}else if(t.id==='chf')S.chap.fonte=t.value;else if(t.closest('[data-calc]'))runCalcs()});
 q.addEventListener('input',()=>{S.sf='all';render()});
 kg.addEventListener('input',()=>{Object.values(S.cv).forEach(v=>delete v.peso);if(S.view==='calc'&&!q.value.trim()){const w=weight();view.querySelectorAll('[data-k=peso]').forEach(i=>i.value=w||'');runCalcs()}else render()});
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();q.focus();q.select()}else if(e.key==='Escape'&&document.activeElement===q){q.value='';render()}});

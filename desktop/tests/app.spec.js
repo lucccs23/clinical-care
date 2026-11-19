@@ -199,3 +199,14 @@ test('lê o texto de PDFs com o pdf.js embutido, dentro da política de seguran�
   }, [...buffer]);
   expect(text).toBe('Texto fictício do programa 5 mg');
 });
+
+test('lê um capítulo em PDF e leva o trecho para um cenário', async () => {
+  await menu('Prescrições').click();
+  await page.locator('#chapter').setInputFiles(pdfFicticio([['Droga Programa', '2 mg/kg EV']], 'capitulo-programa.pdf'));
+  const reader = page.getByRole('dialog', { name: 'Ler capítulo' });
+  await expect(reader).toContainText('1 trecho com dose');
+  await reader.getByRole('button', { name: 'Selecionar visíveis' }).click();
+  await reader.getByRole('button', { name: 'Levar 1 trecho' }).click();
+  await page.getByRole('button', { name: 'Salvar cenário' }).click();
+  await expect(page.locator('.rxi')).toContainText('capitulo-programa, p. 1');
+});
