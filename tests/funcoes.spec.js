@@ -266,3 +266,57 @@ test('recusa backup inválido sem alterar a biblioteca', async ({ page }) => {
   await expect(page.locator('.ft')).toHaveCount(1);
   await expect(page.getByText('anotacao.txt', { exact: true })).toBeVisible();
 });
+
+test('troca entre todos os temas e guarda a escolha', async ({ page }) => {
+  const html = page.locator('html');
+  const themes = {
+    Petróleo: 'dark',
+    Papel: 'light',
+    Céu: 'ceu',
+    'Noite azul': 'noite',
+    Grafite: 'grafite',
+    'Plantão noturno': 'noturno',
+    'Alto contraste': 'contraste',
+  };
+  await importFiles(page, [doseCsv()]);
+  await weight(page).fill('20');
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  await page.getByRole('button', { name: 'Mais temas' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Aparência' });
+  await expect(dialog.locator('.tcard')).toHaveCount(8);
+  await page.screenshot({ path: evidence('temas-escolha') });
+
+  for (const [name, id] of Object.entries(themes)) {
+    await dialog.getByRole('button', { name: new RegExp(`^${name}`) }).click();
+    await expect(html).toHaveAttribute('data-theme', id);
+    await expect(dialog.getByRole('button', { name: new RegExp(`^${name}`) })).toHaveAttribute('aria-pressed', 'true');
+  }
+  await dialog.getByRole('button', { name: 'Fechar' }).click();
+  for (const id of Object.values(themes)) {
+    await page.evaluate((theme) => {
+      document.documentElement.dataset.theme = theme;
+    }, id);
+    await page.screenshot({ path: evidence(`tema-${id}`) });
+  }
+
+  await page.getByRole('button', { name: 'Mais temas' }).click();
+  await dialog.getByRole('button', { name: /^Noite azul/ }).click();
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme', 'noite');
+  await expect(page.getByRole('button', { name: 'Mais temas' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Tema escuro' })).toHaveAttribute('aria-pressed', 'false');
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.getByRole('button', { name: 'Mais temas' }).click();
+  await dialog.getByRole('button', { name: /^Automático/ }).click();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(html).toHaveAttribute('data-theme', 'light');
+
+  await dialog.getByRole('button', { name: 'Fechar' }).click();
+  await page.getByRole('button', { name: 'Tema escuro' }).click();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByRole('button', { name: 'Tema escuro' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Mais temas' })).toHaveAttribute('aria-pressed', 'false');
+});
