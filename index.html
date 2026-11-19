@@ -247,10 +247,10 @@ fieldset.rxe{margin:0;padding:var(--s2);border:1px solid var(--line);border-radi
 .rxt{display:flex;justify-content:flex-end;gap:var(--s1);margin-top:var(--s2)}
 .sec:disabled{opacity:.5;cursor:default}
 @media(max-width:520px){.rxg{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:1240px){.ctl.s input{width:192px}.brand b{display:none}.lib,.dosebox{grid-column:span 12}.tri{grid-column:span 6}}
+@media(max-width:1240px){.ctl.s input{width:192px}.lib,.dosebox{grid-column:span 12}.tri{grid-column:span 6}}
 @media(max-width:940px){
   .side{position:static;flex-wrap:wrap;height:auto;gap:0 var(--s2);padding:var(--s1) var(--s2) 0}
-  .brand{flex:1}.brand b{display:inline}
+  .brand{flex:1}
   .navs{order:3;flex:0 0 100%;height:var(--h-m);margin-top:var(--s1)}
   #nav2{margin-left:0}
   #view{padding:0 var(--s2) var(--s4)}
@@ -269,7 +269,7 @@ fieldset.rxe{margin:0;padding:var(--s2);border:1px solid var(--line);border-radi
 </head>
 <body>
 <aside class="side">
-  <div class="brand"><span id="logo"></span><b>Orvia</b></div>
+  <div class="brand" role="img" aria-label="Orvia" title="Orvia"><span id="logo"></span></div>
   <div class="navs">
     <nav class="nav" id="nav" aria-label="Seções"></nav>
     <nav class="nav" id="nav2" aria-label="Biblioteca"></nav>
@@ -791,7 +791,7 @@ addEventListener('dragleave',e=>{if(!e.relatedTarget)$('#drop').classList.remove
 addEventListener('drop',e=>{if(hasFiles(e)){e.preventDefault();$('#drop').classList.remove('on');S.cat='';prepare(e.dataTransfer.files)}});
 if(desk){$('#upd').innerHTML=ic('sync',16);$('#upd').hidden=false;desk.onState(u=>{S.upd=u;if(S.updOpen)drawUpdates()})}
 SCHEME.addEventListener('change',()=>{if(S.theme==='system')applyTheme()});
-$('#logo').innerHTML='<svg width="24" height="24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor"><path d="M 79.3087 74.5435 A 39 39 0 1 1 38.2501 12.5108 L 40.5931 20.6815 A 30.5 30.5 0 1 0 72.7030 69.1943 Z"/><path d="M 59.7499 12.5108 A 39 39 0 0 1 87.4075 56.7723 L 79.0366 55.2963 A 30.5 30.5 0 0 0 57.4069 20.6815 Z"/><rect x="33" y="10" width="11" height="15" rx="4"/><rect x="54" y="10" width="11" height="15" rx="4"/><circle cx="78" cy="71" r="9.4" fill="none" stroke="currentColor" stroke-width="6.8"/></svg>';$('#si').innerHTML=ic('search',16);$('#pi').innerHTML=ic('up',17);
+$('#logo').innerHTML='<svg width="32" height="32" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor"><path d="M 79.3087 74.5435 A 39 39 0 1 1 38.2501 12.5108 L 40.5931 20.6815 A 30.5 30.5 0 1 0 72.7030 69.1943 Z"/><path d="M 59.7499 12.5108 A 39 39 0 0 1 87.4075 56.7723 L 79.0366 55.2963 A 30.5 30.5 0 0 0 57.4069 20.6815 Z"/><rect x="33" y="10" width="11" height="15" rx="4"/><rect x="54" y="10" width="11" height="15" rx="4"/><circle cx="78" cy="71" r="9.4" fill="none" stroke="currentColor" stroke-width="6.8"/></svg>';$('#si').innerHTML=ic('search',16);$('#pi').innerHTML=ic('up',17);
 render();reload();
 </script>
 </body>
