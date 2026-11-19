@@ -17,8 +17,8 @@ test('embute o pdf.js e lê o texto de um PDF sem rede e sem worker separado', a
 
   const { buffer } = pdfFicticio([['Primeira página fictícia'], ['Droga Teste 2 mg/kg (máx. 10 mg)', 'Linha final']]);
   const pages = await page.evaluate(async (bytes) => {
-    // O pdf.js roda como módulo: o título pode aparecer antes dele, mas DOMContentLoaded só vem depois.
-    if (document.readyState === 'loading') await new Promise((done) => document.addEventListener('DOMContentLoaded', done, { once: true }));
+    // O pdf.js roda como módulo, depois do restante da página: o título pode aparecer antes dele.
+    if (document.readyState !== 'complete') await new Promise((done) => addEventListener('load', done, { once: true }));
     const task = globalThis.pdfjsLib.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false });
     const pdf = await task.promise;
     const result = [];
