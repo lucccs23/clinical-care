@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Painel de Plantão</title>
+<title>Orvia</title>
 <style>
 :root{
   --bg:#f4f1e9;--panel:#fbf9f3;--inset:#ece8dc;--line:#d5cfbf;--text:#16302a;--soft:#3d544d;--muted:#65776f;
@@ -268,7 +268,7 @@ fieldset.rxe{margin:0;padding:var(--s2);border:1px solid var(--line);border-radi
 </head>
 <body>
 <aside class="side">
-  <div class="brand"><span id="logo"></span><b>Plantão</b></div>
+  <div class="brand"><span id="logo"></span><b>Orvia</b></div>
   <div class="navs">
     <nav class="nav" id="nav" aria-label="Seções"></nav>
     <nav class="nav" id="nav2" aria-label="Biblioteca"></nav>
@@ -550,7 +550,7 @@ async function readChapter(blob,name){
   // O pdf.js entra como módulo no build e só existe depois que a página termina de carregar.
   if(document.readyState!=='complete')await new Promise(r=>addEventListener('load',r,{once:true}));
   const lib=globalThis.pdfjsLib;
-  if(!lib)return fail('O leitor de PDF não está nesta cópia do painel. Use o arquivo gerado pelo build ou o programa instalado.');
+  if(!lib)return fail('O leitor de PDF não está nesta cópia do Orvia. Use o arquivo gerado pelo build ou o programa instalado.');
   let task;
   try{
     task=lib.getDocument({data:new Uint8Array(await blob.arrayBuffer()),isEvalSupported:false,disableFontFace:true,useSystemFonts:false,enableXfa:false,verbosity:0});
@@ -617,7 +617,7 @@ async function exportBackup(){
   try{
     const parts=['{"app":"painel-plantao","versao":1,"favs":',JSON.stringify(S.favs),',"cenarios":',JSON.stringify(S.cens),',"files":['];
     for(const[i,f]of S.files.entries()){const{blob,...meta}=f;parts.push((i?',':'')+JSON.stringify({...meta,data:await toB64(blob)}))}
-    parts.push(']}');saveAs(new Blob(parts,{type:'application/json'}),'painel-plantao-backup-'+new Date().toLocaleDateString('sv')+'.json');toast('Backup exportado');
+    parts.push(']}');saveAs(new Blob(parts,{type:'application/json'}),'orvia-backup-'+new Date().toLocaleDateString('sv')+'.json');toast('Backup exportado');
   }catch{toast('Não foi possível gerar o backup')}
 }
 const bad=()=>{throw Error('Backup inválido')};

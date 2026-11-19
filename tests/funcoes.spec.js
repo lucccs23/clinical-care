@@ -168,7 +168,7 @@ test('filtra a busca por categoria e destaca o termo sem criar HTML', async ({ p
   await expect(page.locator('article.calc')).toHaveCount(0);
 });
 
-test('escreve registros no painel e recusa nome repetido', async ({ page }) => {
+test('escreve registros no Orvia e recusa nome repetido', async ({ page }) => {
   await menu(page, 'Prescrições').click();
   await page.getByRole('button', { name: 'Escrever registro' }).click();
   const empty = page.getByRole('dialog', { name: 'Novo registro' });
@@ -209,7 +209,7 @@ test('exporta e restaura a biblioteca com favoritos', async ({ page }, testInfo)
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar backup' }).click();
   const download = await pending;
-  expect(download.suggestedFilename()).toMatch(/^painel-plantao-backup-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(download.suggestedFilename()).toMatch(/^orvia-backup-\d{4}-\d{2}-\d{2}\.json$/);
   const path = testInfo.outputPath('backup.json');
   await download.saveAs(path);
   const content = await readFile(path, 'utf8');

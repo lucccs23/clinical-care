@@ -40,7 +40,7 @@ test.afterEach(async () => {
 });
 
 test('abre em janela própria e mantém os dados ao reabrir', async () => {
-  await expect(page).toHaveTitle('Painel de Plantão');
+  await expect(page).toHaveTitle('Orvia');
   expect(page.url()).toBe('painel://app/index.html');
   await page.screenshot({ path: 'test-results/evidencias/app-inicio.png' });
 
@@ -85,7 +85,7 @@ test('não dá acesso ao sistema nem à internet', async () => {
     url: 'https://example.com/',
     prevented: true,
     current: 'painel://app/index.html',
-    title: 'Painel de Plantão',
+    title: 'Orvia',
   });
   expect(app.windows()).toHaveLength(1);
 });
@@ -209,4 +209,9 @@ test('lê um capítulo em PDF e leva o trecho para um cenário', async () => {
   await reader.getByRole('button', { name: 'Levar 1 trecho' }).click();
   await page.getByRole('button', { name: 'Salvar cenário' }).click();
   await expect(page.locator('.rxi')).toContainText('capitulo-programa, p. 1');
+});
+
+test('mantém a pasta de dados escolhida ao abrir, sem usar o perfil real', async () => {
+  expect(await app.evaluate(({ app: electronApp }) => electronApp.getPath('userData'))).toBe(profile);
+  expect(await app.evaluate(({ app: electronApp }) => electronApp.getName())).toBe('Orvia');
 });
