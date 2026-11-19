@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { allFormats } from '../.claude/skills/verify/fixtures.js';
+import { cenariosFicticios } from './dados-ficticios.js';
 
 // Mede a tela renderizada: espaços em múltiplos de 4, controles em múltiplos de 8 e linhas na base de 4.
 const SPACING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'rowGap', 'columnGap'];
@@ -56,12 +57,17 @@ async function screens(page) {
   await page.locator('#view').getByRole('button', { name: 'Novo registro' }).click();
   checks.registro = await offGrid(page);
   await page.getByRole('button', { name: 'Cancelar' }).click();
+  await page.getByRole('button', { name: /^Cenário Alfa/ }).click();
+  checks.cenario = await offGrid(page);
+  await page.getByRole('button', { name: 'Editar' }).click();
+  checks.editor = await offGrid(page);
+  await page.getByRole('button', { name: 'Cancelar' }).click();
   return Object.fromEntries(Object.entries(checks).filter(([, errors]) => errors.length));
 }
 
 test('segue a grade de 8 pontos no computador e no celular', async ({ page }) => {
   await page.goto('/');
-  await page.locator('#file').setInputFiles(allFormats);
+  await page.locator('#file').setInputFiles([...allFormats, cenariosFicticios()]);
   await expect(page.getByRole('dialog', { name: 'Importar arquivos' })).toBeVisible();
   expect(await offGrid(page)).toEqual([]);
   await page.locator('[data-commit]').click();
