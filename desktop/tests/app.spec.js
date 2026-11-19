@@ -114,6 +114,47 @@ test('abre arquivos em janela separada, sem acesso ao sistema', async () => {
   expect(type).toBe('application/pdf');
 });
 
+test('conduz a atualização pelo botão, sem expor o sistema à página', async () => {
+  expect(await page.evaluate(() => Object.keys(window.painelApp).sort())).toEqual([
+    'check',
+    'download',
+    'info',
+    'install',
+    'onState',
+  ]);
+  await page.getByRole('button', { name: 'Buscar atualizações' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Atualizações' });
+  await expect(dialog).toContainText('Versão instalada: 1.1.0');
+  await dialog.getByRole('button', { name: 'Buscar agora' }).click();
+  await expect(dialog).toContainText('Disponível apenas no programa instalado');
+
+  await app.evaluate(({ ipcMain, BrowserWindow }) => {
+    const send = (state) => BrowserWindow.getAllWindows()[0].webContents.send('update:state', state);
+    globalThis.calls = [];
+    for (const [channel, state] of [
+      ['update:check', { status: 'available', version: '9.9.9' }],
+      ['update:download', { status: 'ready', version: '9.9.9' }],
+    ]) {
+      ipcMain.removeHandler(channel);
+      ipcMain.handle(channel, () => send(state));
+    }
+    ipcMain.removeHandler('update:install');
+    ipcMain.handle('update:install', () => globalThis.calls.push('install'));
+    globalThis.sendUpdate = send;
+  });
+  await dialog.getByRole('button', { name: 'Buscar agora' }).click();
+  await expect(dialog).toContainText('Versão 9.9.9 disponível');
+  await app.evaluate(() => globalThis.sendUpdate({ status: 'error' }));
+  await expect(dialog).toContainText('Não foi possível concluir');
+  await app.evaluate(() => globalThis.sendUpdate({ status: 'downloading', percent: 40 }));
+  await expect(dialog).toContainText('Baixando: 40%');
+  await app.evaluate(() => globalThis.sendUpdate({ status: 'available', version: '9.9.9' }));
+  await dialog.getByRole('button', { name: 'Baixar atualização' }).click();
+  await dialog.getByRole('button', { name: 'Reiniciar e instalar' }).click();
+  expect(await page.evaluate(() => window.painelApp.info().then((info) => info.version))).toBe('1.1.0');
+  expect(await app.evaluate(() => globalThis.calls)).toEqual(['install']);
+});
+
 test('copia resultado e salva o backup', async () => {
   const target = test.info().outputPath('backup.json');
   await importFiles([txt]);

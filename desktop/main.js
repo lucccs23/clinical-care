@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, dialog, Menu, protocol, session } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session } from 'electron';
+import updater from 'electron-updater';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ORIGIN = 'painel://app';
@@ -25,6 +26,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let mainWindow;
+let updateState = { status: 'idle' };
 const openFiles = new Map();
 
 const indexPath = () => (app.isPackaged ? join(here, 'app', 'index.html') : join(here, '..', 'index.html'));
@@ -67,6 +69,48 @@ function serveApp() {
   });
 }
 
+function setUpdateState(state) {
+  updateState = state;
+  mainWindow?.webContents.send('update:state', state);
+}
+
+// A busca só acontece quando a pessoa pede, e usa uma sessão separada da página.
+function setupUpdates() {
+  const isOwnPage = (event) => event.sender === mainWindow?.webContents && event.senderFrame?.url === HOME;
+  const handle = (channel, action) =>
+    ipcMain.handle(channel, (event) => (isOwnPage(event) ? action() : undefined));
+  const client = app.isPackaged ? updater.autoUpdater : undefined;
+
+  if (client) {
+    client.autoDownload = false;
+    client.autoInstallOnAppQuit = false;
+    client.on('checking-for-update', () => setUpdateState({ status: 'checking' }));
+    client.on('update-not-available', () => setUpdateState({ status: 'none' }));
+    client.on('update-available', ({ version }) => setUpdateState({ status: 'available', version }));
+    client.on('download-progress', ({ percent }) =>
+      setUpdateState({ status: 'downloading', percent: Math.round(percent) }),
+    );
+    client.on('update-downloaded', ({ version }) => setUpdateState({ status: 'ready', version }));
+    client.on('error', () => setUpdateState({ status: 'error' }));
+  }
+
+  handle('update:info', () => ({ version: app.getVersion(), state: updateState }));
+  handle('update:check', async () => {
+    if (!client) return setUpdateState({ status: 'unavailable' });
+    if (['checking', 'downloading', 'ready'].includes(updateState.status)) return undefined;
+    await client.checkForUpdates().catch(() => setUpdateState({ status: 'error' }));
+    return undefined;
+  });
+  handle('update:download', async () => {
+    if (client && updateState.status === 'available') {
+      await client.downloadUpdate().catch(() => setUpdateState({ status: 'error' }));
+    }
+  });
+  handle('update:install', () => {
+    if (client && updateState.status === 'ready') client.quitAndInstall(true, true);
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -76,7 +120,7 @@ function createWindow() {
     show: false,
     backgroundColor: '#0c1716',
     icon: join(here, 'build', 'icon.png'),
-    webPreferences: secureWeb,
+    webPreferences: { ...secureWeb, preload: join(here, 'preload.cjs') },
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   mainWindow.on('closed', () => {
@@ -131,6 +175,7 @@ if (!app.requestSingleInstanceLock()) {
     Menu.setApplicationMenu(null);
     lockDownSession();
     serveApp();
+    setupUpdates();
     createWindow();
   });
 }
