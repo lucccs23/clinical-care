@@ -74,7 +74,7 @@ function createWindow() {
     minWidth: 420,
     minHeight: 600,
     show: false,
-    backgroundColor: '#08090d',
+    backgroundColor: '#0c1716',
     icon: join(here, 'build', 'icon.png'),
     webPreferences: secureWeb,
   });
