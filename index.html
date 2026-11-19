@@ -245,6 +245,14 @@ fieldset.rxe{margin:0;padding:var(--s2);border:1px solid var(--line);border-radi
 .rxg input,.rxg textarea{display:block;width:100%;margin-top:var(--s-half);padding:var(--s1);background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);color:var(--text)}
 .rxg input{height:var(--h-m)}.rxg textarea{min-height:var(--s9);resize:vertical}
 .rxt{display:flex;justify-content:flex-end;gap:var(--s1);margin-top:var(--s2)}
+.alted{display:grid;justify-items:start;gap:var(--s1-5);margin-top:var(--s2);padding-top:var(--s2);border-top:1px dashed var(--line)}
+.alth{margin:0;font-size:13px;line-height:20px;font-weight:600;color:var(--muted)}
+.alte{justify-self:stretch;padding:var(--s1-5);border-left:var(--s-half) solid var(--line);background:var(--inset2,transparent);border-radius:var(--r1)}
+.alte .rxt{margin-top:var(--s1)}
+.rxalt{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:var(--s1);margin-top:var(--s1);font-size:13px;line-height:20px}
+.rxalt ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s-half)}
+.rxalt li{display:flex;flex-wrap:wrap;column-gap:var(--s1);overflow-wrap:anywhere}.rxalt li b{font-size:13px;line-height:20px}
+.rxap{font-family:var(--mono)}.rxalt .rxo{color:var(--muted)}
 .sec:disabled{opacity:.5;cursor:default}
 @media(max-width:520px){.rxg{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:1240px){.ctl.s input{width:192px}.lib,.dosebox{grid-column:span 12}.tri{grid-column:span 6}}
@@ -374,12 +382,14 @@ const dbDel=async id=>{if(S.mem){S.files=S.files.filter(x=>x.id!==id);return}awa
 const cenAll=()=>S.mem?S.cens:tx('readonly',s=>s.getAll(),'cenarios');
 const cenPut=async c=>{if(S.mem){S.cens=[...S.cens.filter(x=>x.id!==c.id),c];return}await tx('readwrite',s=>s.put(c),'cenarios')};
 const cenDel=async id=>{if(S.mem){S.cens=S.cens.filter(x=>x.id!==id);return}await tx('readwrite',s=>s.delete(id),'cenarios')};
+const ALTF=[['droga','Alternativa'],['posologia','Dose e posologia'],['obs','Observações']];
+const altsOf=i=>Array.isArray(i?.alts)?i.alts:[];
 const RXF=[['droga','Medicamento'],['apresentacao','Apresentação ou preparo'],['posologia','Dose e posologia'],['via','Via'],['obs','Observações'],['ref','Referência']];
 async function reload(){
   try{S.files=await dbAll();S.cens=await cenAll()}catch{S.mem=true;toast('Armazenamento indisponível: os arquivos valem só nesta sessão')}
   S.files.sort((a,b)=>b.at-a.at);
   S.recs=S.files.flatMap(f=>f.recs.map((r,i)=>({...r,id:f.id+':'+i,cat:f.cat,fid:f.id,fname:f.name,ext:f.ext,t:'rec',hay:norm([r.title,...(r.fields||[]).flat(),r.text,CATS[f.cat][0],f.name].join(' ')),nt:norm(r.title)})));
-  S.cenItems=S.cens.map(c=>({...c,id:'cen:'+c.id,cid:c.id,t:'cen',cat:'prescricoes',hay:norm([c.title,c.note,...c.items.flatMap(i=>RXF.map(([k])=>i[k])),'prescricao cenario'].join(' ')),nt:norm(c.title)}));
+  S.cenItems=S.cens.map(c=>({...c,id:'cen:'+c.id,cid:c.id,t:'cen',cat:'prescricoes',hay:norm([c.title,c.note,...c.items.flatMap(i=>[...RXF.map(([k])=>i[k]),...altsOf(i).flatMap(a=>ALTF.map(([k])=>a[k]))]),'prescricao cenario'].join(' ')),nt:norm(c.title)}));
   render();
 }
 
@@ -478,32 +488,38 @@ async function saveNew(){
 
 /* Cenários de prescrição */
 const sameTitle=(a,b)=>norm(a.title).trim()===norm(b.title).trim();
-const blankRx=()=>({droga:'',apresentacao:'',posologia:'',via:'',obs:'',ref:''});
+const blankRx=()=>({droga:'',apresentacao:'',posologia:'',via:'',obs:'',ref:'',alts:[]});
+const blankAlt=()=>({droga:'',posologia:'',obs:''});
 function openCenEdit(id,add){
   const c=id&&S.cens.find(x=>x.id===id);
-  S.edit=c?{id:c.id,title:c.title,note:c.note||'',items:c.items.map(i=>({...blankRx(),...i}))}:{id:null,title:'',note:'',items:[blankRx()]};
+  S.edit=c?{id:c.id,title:c.title,note:c.note||'',items:c.items.map(i=>({...blankRx(),...i,alts:altsOf(i).map(a=>({...blankAlt(),...a}))}))}:{id:null,title:'',note:'',items:[blankRx()]};
   if(add){S.edit.items=[...S.edit.items.filter(i=>RXF.some(([k])=>String(i[k]).trim())),...add.items];if(!c)S.edit.title=add.title}
   drawCenEdit();if(!dlg.open)dlg.showModal();$('#ct').focus();
 }
 function syncEdit(){
   const e=S.edit;e.title=$('#ct').value;e.note=$('#cn').value;
-  e.items=[...dlg.querySelectorAll('[data-row]')].map(f=>Object.fromEntries(RXF.map(([k])=>[k,f.querySelector(`[data-f="${k}"]`).value])));
+  e.items=[...dlg.querySelectorAll('[data-row]')].map(f=>({...Object.fromEntries(RXF.map(([k])=>[k,f.querySelector(`[data-f="${k}"]`).value])),alts:[...f.querySelectorAll('[data-alt]')].map(a=>Object.fromEntries(ALTF.map(([k])=>[k,a.querySelector(`[data-af="${k}"]`).value])))}));
 }
 function drawCenEdit(){
   const e=S.edit,n=e.items.length,inp=(it,k,l,i,area)=>`<label class="${area?'wide':''}">${l}${area?`<textarea data-f="${k}">${esc(it[k])}</textarea>`:`<input data-f="${k}" value="${esc(it[k])}" autocomplete="off" ${k==='via'?'list="vias"':''}>`}</label>`;
-  dlg.innerHTML=`<h2 id="dt">${e.id?'Editar cenário':'Novo cenário'}</h2><div class="stackf"><label>Nome do cenário<input id="ct" maxlength="120" value="${esc(e.title)}" autocomplete="off"></label><label>Observações gerais<textarea id="cn" class="short">${esc(e.note)}</textarea></label></div><h3 class="sh2">Medicamentos</h3><div class="rxed">${e.items.map((it,i)=>`<fieldset class="rxe" data-row="${i}"><legend>Medicamento ${i+1}</legend><div class="rxg">${inp(it,'droga','Medicamento',i)}${inp(it,'apresentacao','Apresentação ou preparo',i)}${inp(it,'posologia','Dose e posologia',i,true)}${inp(it,'via','Via',i)}${inp(it,'obs','Observações',i,true)}${inp(it,'ref','Referência',i)}</div><div class="rxt"><button class="sec" data-rowmove="${i}:-1" aria-label="Subir medicamento ${i+1}" ${i?'':'disabled'}>Subir</button><button class="sec" data-rowmove="${i}:1" aria-label="Descer medicamento ${i+1}" ${i<n-1?'':'disabled'}>Descer</button><button class="sec" data-rowdel="${i}" aria-label="Remover medicamento ${i+1}">Remover</button></div></fieldset>`).join('')}</div><datalist id="vias">${['Oral','Endovenosa','Intramuscular','Subcutânea','Inalatória','Sublingual','Retal','Tópica'].map(v=>`<option value="${v}">`).join('')}</datalist><button class="sec" data-rowadd>${ic('plus',15)}Adicionar medicamento</button><p class="err" id="ce" role="alert"></p><div class="priv">O cenário fica apenas neste computador, sem criptografia. Não inclua dados que identifiquem pacientes.</div><div class="da"><button class="sec" data-cancel>Cancelar</button><button class="pri" data-censave>Salvar cenário</button></div>`;
+  dlg.innerHTML=`<h2 id="dt">${e.id?'Editar cenário':'Novo cenário'}</h2><div class="stackf"><label>Nome do cenário<input id="ct" maxlength="120" value="${esc(e.title)}" autocomplete="off"></label><label>Observações gerais<textarea id="cn" class="short">${esc(e.note)}</textarea></label></div><h3 class="sh2">Medicamentos</h3><div class="rxed">${e.items.map((it,i)=>`<fieldset class="rxe" data-row="${i}"><legend>Medicamento ${i+1}</legend><div class="rxg">${inp(it,'droga','Medicamento',i)}${inp(it,'apresentacao','Apresentação ou preparo',i)}${inp(it,'posologia','Dose e posologia',i,true)}${inp(it,'via','Via',i)}${inp(it,'obs','Observações',i,true)}${inp(it,'ref','Referência',i)}</div>${altsEdit(it,i)}<div class="rxt"><button class="sec" data-rowmove="${i}:-1" aria-label="Subir medicamento ${i+1}" ${i?'':'disabled'}>Subir</button><button class="sec" data-rowmove="${i}:1" aria-label="Descer medicamento ${i+1}" ${i<n-1?'':'disabled'}>Descer</button><button class="sec" data-rowdel="${i}" aria-label="Remover medicamento ${i+1}">Remover</button></div></fieldset>`).join('')}</div><datalist id="vias">${['Oral','Endovenosa','Intramuscular','Subcutânea','Inalatória','Sublingual','Retal','Tópica'].map(v=>`<option value="${v}">`).join('')}</datalist><button class="sec" data-rowadd>${ic('plus',15)}Adicionar medicamento</button><p class="err" id="ce" role="alert"></p><div class="priv">O cenário fica apenas neste computador, sem criptografia. Não inclua dados que identifiquem pacientes.</div><div class="da"><button class="sec" data-cancel>Cancelar</button><button class="pri" data-censave>Salvar cenário</button></div>`;
+}
+function altsEdit(it,i){
+  const a=altsOf(it),f=(alt,k,l,j,area)=>`<label class="${area?'wide':''}">${l}${area?`<textarea data-af="${k}">${esc(alt[k])}</textarea>`:`<input data-af="${k}" value="${esc(alt[k])}" autocomplete="off">`}</label>`;
+  return`<div class="alted"><h4 class="alth">Alternativas</h4>${a.map((alt,j)=>`<div class="alte" data-alt="${j}" role="group" aria-label="Alternativa ${j+1} do medicamento ${i+1}"><div class="rxg">${f(alt,'droga','Alternativa',j)}${f(alt,'posologia','Dose e posologia',j)}${f(alt,'obs','Observações',j,true)}</div><div class="rxt"><button class="sec" data-altdel="${i}:${j}" aria-label="Remover alternativa ${j+1} do medicamento ${i+1}">Remover alternativa</button></div></div>`).join('')}<button class="sec" data-altadd="${i}" aria-label="Adicionar alternativa ao medicamento ${i+1}">${ic('plus',15)}Adicionar alternativa</button></div>`;
 }
 async function saveCen(){
-  syncEdit();const e=S.edit,title=e.title.trim(),items=e.items.map(i=>Object.fromEntries(RXF.map(([k])=>[k,i[k].trim()]))).filter(i=>i.droga),fail=m=>{$('#ce').textContent=m};
+  syncEdit();const e=S.edit,title=e.title.trim(),items=e.items.map(i=>({...Object.fromEntries(RXF.map(([k])=>[k,i[k].trim()])),alts:altsOf(i).map(a=>Object.fromEntries(ALTF.map(([k])=>[k,a[k].trim()]))).filter(a=>a.droga)})).filter(i=>i.droga),fail=m=>{$('#ce').textContent=m};
   if(!title)return fail('Dê um nome ao cenário.');
   if(S.cens.some(c=>c.id!==e.id&&norm(c.title).trim()===norm(title)))return fail('Já existe um cenário com esse nome.');
   if(e.items.some(i=>!i.droga.trim()&&RXF.some(([k])=>i[k].trim())))return fail('Preencha o nome de cada medicamento ou remova a linha.');
+  if(e.items.some(i=>altsOf(i).some(a=>!a.droga.trim()&&ALTF.some(([k])=>a[k].trim()))))return fail('Preencha o nome de cada alternativa ou remova a linha.');
   const id=e.id||newId();
   try{await cenPut({id,title,note:e.note.trim(),items,at:Date.now()})}catch{return fail('Não foi possível salvar. Verifique o espaço do navegador.')}
   S.view='prescricoes';S.cen=id;q.value='';await reload();closeDialog();toast('Cenário salvo');
 }
 function cenText(c){
-  return[c.title,'',...c.items.map((i,n)=>[`${n+1}. ${i.droga}${i.apresentacao?' — '+i.apresentacao:''}`,[i.posologia,i.via&&'Via '+i.via].filter(Boolean).join(' · '),i.obs,i.ref&&'Fonte: '+i.ref].filter(Boolean).join('\n   ')),...(c.note?['','Observações: '+c.note]:[])].join('\n');
+  return[c.title,'',...c.items.map((i,n)=>[`${n+1}. ${i.droga}${i.apresentacao?' — '+i.apresentacao:''}`,[i.posologia,i.via&&'Via '+i.via].filter(Boolean).join(' · '),i.obs,...altsOf(i).map(a=>'Alternativa: '+[a.droga,a.posologia,a.obs].filter(Boolean).join(' · ')),i.ref&&'Fonte: '+i.ref].filter(Boolean).join('\n   ')),...(c.note?['','Observações: '+c.note]:[])].join('\n');
 }
 async function deleteCen(id){
   const c=S.cens.find(x=>x.id===id);if(!c||!confirm(`Excluir o cenário "${c.title}"?`))return;
@@ -637,7 +653,7 @@ function cleanFile(f){
 const optStr=x=>x==null||typeof x==='string';
 function cleanCen(c){
   if(typeof c?.title!=='string'||!c.title.trim()||!optStr(c.note)||!Array.isArray(c.items))bad();
-  const items=c.items.map(i=>{if(!i||typeof i.droga!=='string'||!i.droga.trim()||!RXF.every(([k])=>optStr(i[k])))bad();return Object.fromEntries(RXF.map(([k])=>[k,i[k]||'']))});
+  const items=c.items.map(i=>{if(!i||typeof i.droga!=='string'||!i.droga.trim()||!RXF.every(([k])=>optStr(i[k]))||!(i.alts==null||Array.isArray(i.alts)))bad();const alts=altsOf(i).map(a=>{if(!a||typeof a.droga!=='string'||!a.droga.trim()||!ALTF.every(([k])=>optStr(a[k])))bad();return Object.fromEntries(ALTF.map(([k])=>[k,a[k]||'']))});return{...Object.fromEntries(RXF.map(([k])=>[k,i[k]||''])),alts}});
   return{old:String(c.id),cen:{id:newId(),title:c.title,note:c.note||'',items,at:Number.isFinite(c.at)?c.at:Date.now()}};
 }
 async function restoreBackup(file){
@@ -712,7 +728,7 @@ function cenList(){
 }
 function cenView(c){
   const it=S.cenItems.find(x=>x.cid===c.id);
-  return`<div class="head"><button class="sec" data-go="prescricoes">${ic('left',15)}Prescrições</button><div class="hbtn">${star(it)}<button class="sec" data-cencopy>${ic('copy',15)}Copiar prescrição</button><button class="sec" data-cenedit>Editar</button><button class="sec" data-cendel>${ic('trash',15)}Excluir</button></div></div>${c.note?`<div class="priv cnote">${esc(c.note)}</div>`:''}${c.items.length?`<ol class="rxl">${c.items.map((i,n)=>`<li class="rxi"><span class="rxn">${n+1}</span><div class="rxb"><b>${esc(i.droga)}</b>${i.apresentacao?`<span class="rxa">${esc(i.apresentacao)}</span>`:''}${i.posologia?`<p class="rxp">${esc(i.posologia)}</p>`:''}${i.via||i.obs?`<div class="rxm">${i.via?`<span class="tag">Via ${esc(i.via)}</span>`:''}${i.obs?`<span class="rxo">${esc(i.obs)}</span>`:''}</div>`:''}${i.ref?`<p class="rxr"><span class="tag">Fonte</span>${esc(i.ref)}</p>`:''}</div></li>`).join('')}</ol>`:`<div class="panel empty"><b>Nenhum medicamento ainda</b><span>Adicione os medicamentos deste cenário.</span><button class="pri" data-cenedit>Adicionar medicamentos</button></div>`}`;
+  return`<div class="head"><button class="sec" data-go="prescricoes">${ic('left',15)}Prescrições</button><div class="hbtn">${star(it)}<button class="sec" data-cencopy>${ic('copy',15)}Copiar prescrição</button><button class="sec" data-cenedit>Editar</button><button class="sec" data-cendel>${ic('trash',15)}Excluir</button></div></div>${c.note?`<div class="priv cnote">${esc(c.note)}</div>`:''}${c.items.length?`<ol class="rxl">${c.items.map((i,n)=>`<li class="rxi"><span class="rxn">${n+1}</span><div class="rxb"><b>${esc(i.droga)}</b>${i.apresentacao?`<span class="rxa">${esc(i.apresentacao)}</span>`:''}${i.posologia?`<p class="rxp">${esc(i.posologia)}</p>`:''}${i.via||i.obs?`<div class="rxm">${i.via?`<span class="tag">Via ${esc(i.via)}</span>`:''}${i.obs?`<span class="rxo">${esc(i.obs)}</span>`:''}</div>`:''}${altsOf(i).length?`<div class="rxalt"><span class="tag">Alternativas</span><ul>${altsOf(i).map(a=>`<li><b>${esc(a.droga)}</b>${a.posologia?`<span class="rxap">${esc(a.posologia)}</span>`:''}${a.obs?`<span class="rxo">${esc(a.obs)}</span>`:''}</li>`).join('')}</ul></div>`:''}${i.ref?`<p class="rxr"><span class="tag">Fonte</span>${esc(i.ref)}</p>`:''}</div></li>`).join('')}</ol>`:`<div class="panel empty"><b>Nenhum medicamento ainda</b><span>Adicione os medicamentos deste cenário.</span><button class="pri" data-cenedit>Adicionar medicamentos</button></div>`}`;
 }
 function filesView(){
   return`<div class="head"><p>Gerencie o que foi importado. O backup guarda arquivos, cenários e favoritos, sem criptografia.</p><div class="hbtn"><button class="sec" data-new="">${ic('plus',15)}Novo registro</button><button class="sec" data-backup>${ic('down',15)}Exportar backup</button><button class="sec" data-restore>${ic('up',15)}Restaurar backup</button><button class="sec" data-template>Baixar modelo de doses</button></div></div>${S.files.length?`<section class="panel flist">${S.files.map(f=>{const t=FT[f.ext];return`<div class="ft"><div class="ext" style="--a:${t[0]};--b:${t[1]}">${esc(f.ext.slice(0,4).toUpperCase())}</div><div style="min-width:0"><b title="${esc(f.name)}">${esc(f.name)}</b><small>${new Date(f.at).toLocaleDateString('pt-BR')} · ${size(f.size)}</small></div><div class="fsel"><select class="sel" style="margin:0" data-fc="${f.id}" aria-label="Categoria de ${esc(f.name)}">${catOpts(f.cat)}</select></div><small class="fn">${f.recs[0]?.doc?'Documento':plural(f.recs.length,'registro','registros')}</small><div>${f.ext==='pdf'?`<button class="icon" data-extract="${f.id}" aria-label="Extrair doses de ${esc(f.name)}" title="Extrair doses">${ic('search',16)}</button>`:''}<button class="icon" data-open="${f.id}" aria-label="Abrir ${esc(f.name)}" title="Abrir">${ic('open',16)}</button><button class="icon" data-del="${f.id}" aria-label="Excluir ${esc(f.name)}" title="Excluir">${ic('trash',16)}</button></div></div>`}).join('')}</section>`:emptyBox('box','Nenhum arquivo importado','CSV, TSV, XLSX, JSON, TXT, MD, DOCX, PDF e imagens.')}`;
@@ -766,6 +782,8 @@ document.addEventListener('click',async e=>{
   else if('cencopy' in d){const c=S.cens.find(x=>x.id===S.cen);if(c)copy(cenText(c),b)}
   else if('censave' in d)saveCen();
   else if('rowadd' in d){syncEdit();S.edit.items.push(blankRx());drawCenEdit();dlg.querySelector(`[data-row="${S.edit.items.length-1}"] input`).focus()}
+  else if(d.altadd){syncEdit();const it=S.edit.items[+d.altadd];it.alts=[...altsOf(it),blankAlt()];drawCenEdit();dlg.querySelector(`[data-row="${d.altadd}"] [data-alt="${it.alts.length-1}"] input`).focus()}
+  else if(d.altdel){syncEdit();const[i,j]=d.altdel.split(':').map(Number);S.edit.items[i].alts.splice(j,1);drawCenEdit()}
   else if(d.rowdel){syncEdit();S.edit.items.splice(+d.rowdel,1);drawCenEdit()}
   else if(d.rowmove){syncEdit();const[i,s]=d.rowmove.split(':').map(Number),a=S.edit.items;[a[i],a[i+s]]=[a[i+s],a[i]];drawCenEdit()}
   else if('chapter' in d){$('#chapter').value='';$('#chapter').click()}

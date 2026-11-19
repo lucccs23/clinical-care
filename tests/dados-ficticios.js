@@ -10,7 +10,15 @@ export const cenariosFicticios = (titles = ['Cenário Alfa']) =>
         title,
         note: 'Observação fictícia',
         items: [
-          { droga: 'Droga Teste', apresentacao: 'Frasco teste', posologia: '1 unidade fictícia', via: 'Oral', obs: '', ref: 'Livro Teste p.1' },
+          {
+            droga: 'Droga Teste',
+            apresentacao: 'Frasco teste',
+            posologia: '1 unidade fictícia',
+            via: 'Oral',
+            obs: '',
+            ref: 'Livro Teste p.1',
+            alts: [{ droga: 'Droga Reserva', posologia: '2 unidades fictícias', obs: 'Se faltar a primeira' }],
+          },
         ],
       })),
     }),
