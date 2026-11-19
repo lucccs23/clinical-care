@@ -8,9 +8,10 @@
   "type": "module",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "npm --prefix .. run build && electron .",
+    "pretest": "npm --prefix .. run build",
     "test": "playwright test",
-    "dist": "electron-builder --win nsis --publish never"
+    "dist": "npm --prefix .. run build && electron-builder --win nsis --publish never"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
@@ -28,7 +29,7 @@
       "preload.cjs",
       "build/icon.png",
       {
-        "from": "..",
+        "from": "../dist",
         "to": "app",
         "filter": [
           "index.html"

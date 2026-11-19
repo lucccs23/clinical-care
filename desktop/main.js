@@ -29,7 +29,7 @@ let mainWindow;
 let updateState = { status: 'idle' };
 const openFiles = new Map();
 
-const indexPath = () => (app.isPackaged ? join(here, 'app', 'index.html') : join(here, '..', 'index.html'));
+const indexPath = () => (app.isPackaged ? join(here, 'app', 'index.html') : join(here, '..', 'dist', 'index.html'));
 const isOwnBlob = (url) => url.startsWith(`blob:${ORIGIN}/`);
 
 function lockDownSession() {

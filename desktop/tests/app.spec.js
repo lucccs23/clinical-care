@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron, expect, test } from '@playwright/test';
 import { file, txt } from '../../.claude/skills/verify/fixtures.js';
+import { pdfFicticio } from '../../tests/dados-ficticios.js';
 
 const { version } = JSON.parse(await readFile(join(import.meta.dirname, '..', 'package.json'), 'utf8'));
 
@@ -184,4 +185,17 @@ test('copia resultado e salva o backup', async () => {
   await expect(page.locator('#toast')).toHaveText('Backup exportado');
   expect(await app.evaluate(() => globalThis.savedBackup)).toBe('completed');
   expect(JSON.parse(await readFile(target, 'utf8')).files[0].name).toBe('anotacao.txt');
+});
+
+test('lê o texto de PDFs com o pdf.js embutido, dentro da política de segurança do programa', async () => {
+  const { buffer } = pdfFicticio([['Texto fictício do programa 5 mg']]);
+  const text = await page.evaluate(async (bytes) => {
+    // O pdf.js roda como módulo: o título pode aparecer antes dele, mas DOMContentLoaded só vem depois.
+    if (document.readyState === 'loading') await new Promise((done) => document.addEventListener('DOMContentLoaded', done, { once: true }));
+    const task = globalThis.pdfjsLib.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false });
+    const content = await (await (await task.promise).getPage(1)).getTextContent();
+    await task.destroy();
+    return content.items.map((item) => item.str).join('');
+  }, [...buffer]);
+  expect(text).toBe('Texto fictício do programa 5 mg');
 });
