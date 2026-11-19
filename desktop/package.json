@@ -1,9 +1,9 @@
 {
-  "name": "painel-plantao",
-  "productName": "Painel de Plantão",
-  "version": "1.4.0",
+  "name": "orvia",
+  "productName": "Orvia",
+  "version": "1.5.0",
   "description": "Consulta clínica offline para o plantão",
-  "author": "Painel de Plantão",
+  "author": "Orvia",
   "private": true,
   "type": "module",
   "main": "main.js",
@@ -50,8 +50,8 @@
       "oneClick": true,
       "perMachine": false,
       "deleteAppDataOnUninstall": false,
-      "shortcutName": "Painel de Plantão",
-      "artifactName": "Painel-de-Plantao-Instalador-${version}.${ext}"
+      "shortcutName": "Orvia",
+      "artifactName": "Orvia-Instalador-${version}.${ext}"
     },
     "publish": [
       {

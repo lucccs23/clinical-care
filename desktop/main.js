@@ -25,6 +25,12 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'painel', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
 ]);
 
+// O programa se chamava "Painel de Plantão". A pasta de dados mantém esse nome para que
+// arquivos, cenários e favoritos continuem lá depois da troca para Orvia.
+if (!app.commandLine.hasSwitch('user-data-dir')) {
+  app.setPath('userData', join(app.getPath('appData'), 'Painel de Plantão'));
+}
+
 let mainWindow;
 let updateState = { status: 'idle' };
 const openFiles = new Map();

@@ -1,4 +1,4 @@
-# Painel de Plantão para Windows
+# Orvia para Windows
 
 Programa que abre o `dist/index.html` gerado pelo build da raiz, com o pdf.js embutido, em janela própria e sem acesso à internet. `npm start`, `npm test` e `npm run dist` rodam o build antes.
 
