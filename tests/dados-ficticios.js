@@ -19,7 +19,8 @@ export const cenariosFicticios = (titles = ['Cenário Alfa']) =>
 
 // PDF mínimo com texto em Helvetica: uma lista de linhas por página. Conteúdo sempre fictício.
 export function pdfFicticio(pages, name = 'capitulo-ficticio.pdf') {
-  const text = (value) => value.replace(/[\\()]/g, (char) => '\\' + char);
+  // Escapa o que a sintaxe do PDF exige e grava os traços nos códigos do WinAnsi, que o latin1 não tem.
+  const text = (value) => value.replace(/[\\()]/g, (char) => '\\' + char).replaceAll('–', '\x96').replaceAll('—', '\x97');
   const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'];
   const kids = [];
   for (const lines of pages) {
