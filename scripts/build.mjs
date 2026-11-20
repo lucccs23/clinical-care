@@ -1,5 +1,8 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { extname, join } from 'node:path';
 import vm from 'node:vm';
 
 const html = await readFile('index.html', 'utf8');
@@ -38,4 +41,21 @@ const output = html.replace('</body>', () => `${embedded}</body>`);
 
 await mkdir('dist', { recursive: true });
 await writeFile('dist/index.html', output);
-console.log(`Build concluído: dist/index.html (pdf.js ${JSON.parse(await pdfjs('../package.json')).version})`);
+
+// Arquivos para instalar no celular (manifesto, ícones e service worker), quando existirem.
+// A versão do cache do service worker muda sempre que algum arquivo publicado muda.
+const PWA_TYPES = { '.js': 'text/javascript', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const pwa = existsSync('pwa') ? (await readdir('pwa')).sort() : [];
+const unknown = pwa.filter((name) => !PWA_TYPES[extname(name)]);
+if (unknown.length) throw new Error(`Tipo não permitido em pwa/: ${unknown.join(', ')}`);
+const files = await Promise.all(pwa.map(async (name) => [name, await readFile(join('pwa', name))]));
+const version = createHash('sha256').update(output);
+files.forEach(([name, data]) => version.update(name).update(data));
+for (const [name, data] of files) {
+  const text = extname(name) === '.png' ? null : data.toString('utf8');
+  if (text && /(?:https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}/i.test(text.replace(/http:\/\/www\.w3\.org\/2000\/svg/g, ''))) {
+    throw new Error(`O app precisa funcionar sem internet: pwa/${name} cita um endereço externo.`);
+  }
+  await writeFile(join('dist', name), text ? text.replaceAll('__VERSAO__', version.copy().digest('hex').slice(0, 12)) : data);
+}
+console.log(`Build concluído: dist/index.html${pwa.length ? ` e ${pwa.length} arquivos de pwa/` : ''} (pdf.js ${JSON.parse(await pdfjs('../package.json')).version})`);
